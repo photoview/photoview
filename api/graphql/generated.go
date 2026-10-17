@@ -143,6 +143,8 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AuthorizeUser               func(childComplexity int, username string, password string) int
+		CancelAllScanJobs           func(childComplexity int) int
+		CancelScanJob               func(childComplexity int, albumID int) int
 		ChangeUserPreferences       func(childComplexity int, language *string) int
 		CombineFaceGroups           func(childComplexity int, destinationFaceGroupID int, sourceFaceGroupIDs []int) int
 		CreateUser                  func(childComplexity int, username string, password *string, admin bool, rootPath *string) int
@@ -194,11 +196,17 @@ type ComplexityRoot struct {
 		MyTimeline                 func(childComplexity int, paginate *models.Pagination, onlyFavorites *bool, fromDate *time.Time) int
 		MyUser                     func(childComplexity int) int
 		MyUserPreferences          func(childComplexity int) int
+		ScannerQueueStatus         func(childComplexity int) int
 		Search                     func(childComplexity int, query string, limitMedia *int, limitAlbums *int) int
 		ShareToken                 func(childComplexity int, credentials models.ShareTokenCredentials) int
 		ShareTokenValidatePassword func(childComplexity int, credentials models.ShareTokenCredentials) int
 		SiteInfo                   func(childComplexity int) int
 		User                       func(childComplexity int, order *models.Ordering, paginate *models.Pagination) int
+	}
+
+	ScannerQueueItem struct {
+		Album  func(childComplexity int) int
+		Status func(childComplexity int) int
 	}
 
 	ScannerResult struct {
@@ -318,6 +326,8 @@ type MutationResolver interface {
 	FavoriteMedia(ctx context.Context, mediaID int, favorite bool) (*models.Media, error)
 	ScanAll(ctx context.Context) (*models.ScannerResult, error)
 	ScanUser(ctx context.Context, userID int) (*models.ScannerResult, error)
+	CancelScanJob(ctx context.Context, albumID int) (bool, error)
+	CancelAllScanJobs(ctx context.Context) (int, error)
 	SetPeriodicScanInterval(ctx context.Context, interval int) (int, error)
 	SetScannerConcurrentWorkers(ctx context.Context, workers int) (int, error)
 	ShareAlbum(ctx context.Context, albumID int, expire *time.Time, password *string, label *string) (*models.ShareToken, error)
@@ -345,6 +355,7 @@ type QueryResolver interface {
 	MediaList(ctx context.Context, ids []int) ([]*models.Media, error)
 	MyMediaGeoJSON(ctx context.Context) (any, error)
 	MapboxToken(ctx context.Context) (*string, error)
+	ScannerQueueStatus(ctx context.Context) ([]*models.ScannerQueueItem, error)
 	Search(ctx context.Context, query string, limitMedia *int, limitAlbums *int) (*models.SearchResult, error)
 	ShareToken(ctx context.Context, credentials models.ShareTokenCredentials) (*models.ShareToken, error)
 	ShareTokenValidatePassword(ctx context.Context, credentials models.ShareTokenCredentials) (bool, error)
@@ -802,6 +813,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.AuthorizeUser(childComplexity, args["username"].(string), args["password"].(string)), true
+	case "Mutation.cancelAllScanJobs":
+		if e.ComplexityRoot.Mutation.CancelAllScanJobs == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.CancelAllScanJobs(childComplexity), true
+	case "Mutation.cancelScanJob":
+		if e.ComplexityRoot.Mutation.CancelScanJob == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_cancelScanJob_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CancelScanJob(childComplexity, args["albumId"].(int)), true
 	case "Mutation.changeUserPreferences":
 		if e.ComplexityRoot.Mutation.ChangeUserPreferences == nil {
 			break
@@ -1230,6 +1258,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.MyUserPreferences(childComplexity), true
+	case "Query.scannerQueueStatus":
+		if e.ComplexityRoot.Query.ScannerQueueStatus == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.ScannerQueueStatus(childComplexity), true
 	case "Query.search":
 		if e.ComplexityRoot.Query.Search == nil {
 			break
@@ -1280,6 +1314,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.User(childComplexity, args["order"].(*models.Ordering), args["paginate"].(*models.Pagination)), true
+
+	case "ScannerQueueItem.album":
+		if e.ComplexityRoot.ScannerQueueItem.Album == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ScannerQueueItem.Album(childComplexity), true
+	case "ScannerQueueItem.status":
+		if e.ComplexityRoot.ScannerQueueItem.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ScannerQueueItem.Status(childComplexity), true
 
 	case "ScannerResult.finished":
 		if e.ComplexityRoot.ScannerResult.Finished == nil {
@@ -1877,6 +1924,16 @@ func (ec *executionContext) childFields_Notification(ctx context.Context, field 
 	return nil, fmt.Errorf("no field named %q was found under type Notification", field.Name)
 }
 
+func (ec *executionContext) childFields_ScannerQueueItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "album":
+		return ec.fieldContext_ScannerQueueItem_album(ctx, field)
+	case "status":
+		return ec.fieldContext_ScannerQueueItem_status(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ScannerQueueItem", field.Name)
+}
+
 func (ec *executionContext) childFields_ScannerResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "finished":
@@ -2192,6 +2249,20 @@ func (ec *executionContext) field_Mutation_authorizeUser_args(ctx context.Contex
 		return nil, err
 	}
 	args["password"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_cancelScanJob_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "albumId",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNID2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["albumId"] = arg0
 	return args, nil
 }
 
@@ -5277,6 +5348,99 @@ func (ec *executionContext) fieldContext_Mutation_scanUser(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_cancelScanJob(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_cancelScanJob(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CancelScanJob(ctx, fc.Args["albumId"].(int))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_cancelScanJob(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_cancelScanJob_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_cancelAllScanJobs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_cancelAllScanJobs(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().CancelAllScanJobs(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal int
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_cancelAllScanJobs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Int does not have child fields"))
+}
+
 func (ec *executionContext) _Mutation_setPeriodicScanInterval(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6766,6 +6930,51 @@ func (ec *executionContext) fieldContext_Query_mapboxToken(_ context.Context, fi
 	return graphql.NewScalarFieldContext("Query", field, true, true, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Query_scannerQueueStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_scannerQueueStatus(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().ScannerQueueStatus(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.IsAuthorized == nil {
+					var zeroVal []*models.ScannerQueueItem
+					return zeroVal, errors.New("directive isAuthorized is not implemented")
+				}
+				return ec.Directives.IsAuthorized(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v []*models.ScannerQueueItem) graphql.Marshaler {
+			return ec.marshalNScannerQueueItem2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerQueueItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_scannerQueueStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ScannerQueueItem(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7208,6 +7417,61 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _ScannerQueueItem_album(ctx context.Context, field graphql.CollectedField, obj *models.ScannerQueueItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ScannerQueueItem_album(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Album, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *models.Album) graphql.Marshaler {
+			return ec.marshalNAlbum2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐAlbum(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ScannerQueueItem_album(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ScannerQueueItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Album(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ScannerQueueItem_status(ctx context.Context, field graphql.CollectedField, obj *models.ScannerQueueItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ScannerQueueItem_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v models.ScannerJobStatus) graphql.Marshaler {
+			return ec.marshalNScannerJobStatus2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerJobStatus(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ScannerQueueItem_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ScannerQueueItem", field, false, false, errors.New("field of type ScannerJobStatus does not have child fields"))
 }
 
 func (ec *executionContext) _ScannerResult_finished(ctx context.Context, field graphql.CollectedField, obj *models.ScannerResult) (ret graphql.Marshaler) {
@@ -10877,6 +11141,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "cancelScanJob":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_cancelScanJob(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cancelAllScanJobs":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_cancelAllScanJobs(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setPeriodicScanInterval":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setPeriodicScanInterval(ctx, field)
@@ -11301,6 +11579,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "scannerQueueStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_scannerQueueStatus(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "search":
 			field := field
 
@@ -11490,6 +11790,49 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			})
 			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var scannerQueueItemImplementors = []string{"ScannerQueueItem"}
+
+func (ec *executionContext) _ScannerQueueItem(ctx context.Context, sel ast.SelectionSet, obj *models.ScannerQueueItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, scannerQueueItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ScannerQueueItem")
+		case "album":
+			out.Values[i] = ec._ScannerQueueItem_album(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._ScannerQueueItem_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -12873,6 +13216,42 @@ func (ec *executionContext) unmarshalNNotificationType2githubᚗcomᚋphotoview�
 
 func (ec *executionContext) marshalNNotificationType2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐNotificationType(ctx context.Context, sel ast.SelectionSet, v models.NotificationType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNScannerJobStatus2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerJobStatus(ctx context.Context, v any) (models.ScannerJobStatus, error) {
+	var res models.ScannerJobStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNScannerJobStatus2githubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerJobStatus(ctx context.Context, sel ast.SelectionSet, v models.ScannerJobStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNScannerQueueItem2ᚕᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerQueueItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.ScannerQueueItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNScannerQueueItem2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerQueueItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNScannerQueueItem2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerQueueItem(ctx context.Context, sel ast.SelectionSet, v *models.ScannerQueueItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ScannerQueueItem(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNScannerResult2ᚖgithubᚗcomᚋphotoviewᚋphotoviewᚋapiᚋgraphqlᚋmodelsᚐScannerResult(ctx context.Context, sel ast.SelectionSet, v *models.ScannerResult) graphql.Marshaler {
