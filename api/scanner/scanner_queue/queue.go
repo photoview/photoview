@@ -92,10 +92,19 @@ func CloseScannerQueue() {
 
 func ChangeScannerConcurrentWorkers(newMaxWorkers int) {
 	global_scanner_queue.mutex.Lock()
-	defer global_scanner_queue.mutex.Unlock()
 
 	log.Printf("Scanner max concurrent workers changed to: %d", newMaxWorkers)
 	global_scanner_queue.settings.max_concurrent_tasks = newMaxWorkers
+
+	global_scanner_queue.mutex.Unlock()
+
+	// The queue only re-evaluates how many jobs it may run in parallel when it is
+	// notified, which otherwise happens only when a job is added or when a job
+	// finishes. A single album job can run for many minutes, so without this the
+	// new limit would not take effect until the next job completes.
+	// notify() never blocks and does not take the mutex, but it is called after
+	// unlocking to keep the critical section as small as possible.
+	global_scanner_queue.notify()
 }
 
 func (queue *ScannerQueue) startBackgroundWorker() {

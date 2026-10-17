@@ -107,3 +107,33 @@ func TestScannerQueueJobOnQueue(t *testing.T) {
 	}
 
 }
+
+func TestChangeScannerConcurrentWorkers(t *testing.T) {
+	originalQueue := global_scanner_queue
+	t.Cleanup(func() {
+		global_scanner_queue = originalQueue
+	})
+
+	global_scanner_queue = ScannerQueue{
+		idle_chan:   make(chan bool, 1),
+		in_progress: make([]ScannerJob, 0),
+		up_next:     make([]ScannerJob, 0),
+		db:          nil,
+		settings:    ScannerQueueSettings{max_concurrent_tasks: 3},
+	}
+
+	ChangeScannerConcurrentWorkers(42)
+
+	if got := global_scanner_queue.settings.max_concurrent_tasks; got != 42 {
+		t.Errorf("Expected max_concurrent_tasks to be 42, got %d", got)
+	}
+
+	// The background worker only re-schedules jobs when it is notified. Without
+	// this the new limit would stay unapplied until some running job finishes,
+	// which can take minutes for an album scan.
+	select {
+	case <-global_scanner_queue.idle_chan:
+	default:
+		t.Error("Expected the scanner queue to be notified about the new worker count")
+	}
+}
