@@ -1,12 +1,15 @@
 package exiftool
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -182,6 +185,70 @@ func TestExiftoolQueryTimeAllHasOffset(t *testing.T) {
 			}
 		})
 	}
+}
+
+const (
+	fakeExiftoolControlEnv = "EXIFTOOL_FAKE_CONTROL"
+	stuckQueryTimeout      = 500 * time.Millisecond
+	queryReturnBound       = 5 * time.Second
+)
+
+const fakeExiftoolScript = `#!/usr/bin/perl
+use strict;
+use warnings;
+$| = 1;
+{
+    my $old = select STDERR;
+    $| = 1;
+    select $old;
+}
+
+if (@ARGV >= 1 && $ARGV[0] eq '-ver') {
+    print "0.0.0-fake\n";
+    exit 0;
+}
+
+if (defined $ENV{EXIFTOOL_FAKE_PID} && $ENV{EXIFTOOL_FAKE_PID} ne '') {
+    open my $fh, '>', $ENV{EXIFTOOL_FAKE_PID} or die $!;
+    print {$fh} "$$\n";
+    close $fh;
+}
+
+while (defined(my $line = <STDIN>)) {
+    next if $line ne "-execute\n";
+
+    my $mode = 'ok';
+    if (defined $ENV{EXIFTOOL_FAKE_CONTROL} && open my $fh, '<', $ENV{EXIFTOOL_FAKE_CONTROL}) {
+        if (defined(my $m = <$fh>)) {
+            chomp $m;
+            $mode = $m if $m ne '';
+        }
+        close $fh;
+    }
+
+    if ($mode eq 'hang') {
+        sleep 3600 while 1;
+    }
+
+    print STDOUT qq([{"MIMEType":"image/jpeg","Model":"FakeCam"}]\n);
+    print STDOUT "{ready}\n";
+    print STDERR "{ready}\n";
+}
+`
+
+func installFakeExiftool(t *testing.T) string {
+	t.Helper()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "exiftool")
+	if err := os.WriteFile(path, []byte(fakeExiftoolScript), 0o755); err != nil {
+		t.Fatalf("write fake exiftool: %v", err)
+	}
+	if err := os.Chmod(path, 0o755); err != nil {
+		t.Fatalf("chmod fake exiftool: %v", err)
+	}
+
+	return dir
 }
 
 func fileModifyDateLiteralUTC(t *testing.T, file string) time.Time {
@@ -405,5 +472,102 @@ func TestExiftoolError(t *testing.T) {
 			_, err = instance.SaveJPEGPreview(tc.file, output)
 			checkErr(err, "SaveJPEGPreview(%q, %q)", tc.file, output)
 		})
+	}
+
+	var value MIMEType
+	if err := instance.QueryJSONTagsByNumber("./test_data/no_exif.jpg", &value); err != nil {
+		t.Fatalf("QueryJSONTagsByNumber after missing file error: %v", err)
+	}
+	if got := value.MIMEType; got == nil || *got != "image/jpeg" {
+		t.Fatalf("QueryJSONTagsByNumber after missing file = %v, want image/jpeg", got)
+	}
+}
+
+func TestQueryJSONTagsByNumberContext(t *testing.T) {
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var missing MIMEType
+	err = instance.QueryJSONTagsByNumberContext(ctx, "./test_data/non_exist.jpg", &missing)
+	if err == nil || !strings.Contains(err.Error(), "File not found") {
+		t.Fatalf("QueryJSONTagsByNumberContext(missing) = %v, want File not found", err)
+	}
+
+	var value MIMEType
+	if err := instance.QueryJSONTagsByNumberContext(ctx, "./test_data/no_exif.jpg", &value); err != nil {
+		t.Fatalf("QueryJSONTagsByNumberContext(%q) error: %v", "./test_data/no_exif.jpg", err)
+	}
+	if got := value.MIMEType; got == nil || *got != "image/jpeg" {
+		t.Fatalf("QueryJSONTagsByNumberContext(%q) = %v, want image/jpeg", "./test_data/no_exif.jpg", got)
+	}
+}
+
+func TestQueryJSONTagsByNumberContextDeadline(t *testing.T) {
+	binDir := installFakeExiftool(t)
+	control := filepath.Join(t.TempDir(), "control")
+	if err := os.WriteFile(control, []byte("hang\n"), 0o644); err != nil {
+		t.Fatalf("write control: %v", err)
+	}
+
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv(fakeExiftoolControlEnv, control)
+
+	instance, err := New()
+	if err != nil {
+		t.Fatalf("new error: %v", err)
+	}
+	defer instance.Close()
+
+	pid := instance.cmd.Process.Pid
+	t.Cleanup(func() {
+		_ = syscall.Kill(pid, syscall.SIGKILL)
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), stuckQueryTimeout)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		var value MIMEType
+		done <- instance.QueryJSONTagsByNumberContext(ctx, "hang.jpg", &value)
+	}()
+
+	var queryErr error
+	select {
+	case queryErr = <-done:
+	case <-time.After(queryReturnBound):
+		_ = syscall.Kill(pid, syscall.SIGKILL)
+		select {
+		case <-done:
+		case <-time.After(queryReturnBound):
+		}
+		t.Fatal("query blocked past the deadline")
+	}
+
+	if !errors.Is(queryErr, context.DeadlineExceeded) {
+		t.Fatalf("query error = %v, want deadline exceeded", queryErr)
+	}
+
+	closeDone := make(chan error, 1)
+	go func() {
+		closeDone <- instance.Close()
+	}()
+	select {
+	case err := <-closeDone:
+		if err != nil {
+			t.Fatalf("Close() after timeout: %v", err)
+		}
+	case <-time.After(queryReturnBound):
+		t.Fatal("Close() blocked; timed out process was not terminated")
+	}
+
+	if err := syscall.Kill(pid, 0); err == nil {
+		t.Fatalf("exiftool pid %d still running after timeout", pid)
 	}
 }
