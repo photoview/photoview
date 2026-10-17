@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Titelbild zurücksetzen",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Als Album Titelbild setzen",
       "title_placeholder": ""
     },

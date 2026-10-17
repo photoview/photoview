@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Omslagfoto resetten",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Instellen als omslagfoto",
       "title_placeholder": "Albumtitel"
     },

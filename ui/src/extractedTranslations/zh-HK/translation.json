@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "",
       "title_placeholder": "相簿名稱"
     },
