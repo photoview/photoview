@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+    <testsuite name="src/Pages/SettingsPage/PeriodicScanner.test.tsx" timestamp="2026-08-03T01:07:15.578Z" hostname="waterdeMacBook-Pro-2.local" tests="2" failures="0" errors="0" skipped="0" time="0.2510000000">
+        <testcase classname="src/Pages/SettingsPage/PeriodicScanner.test.tsx" name="Enable periodic scanner" time="0.1970000000">
+        </testcase>
+        <testcase classname="src/Pages/SettingsPage/PeriodicScanner.test.tsx" name="Auto-save scan interval on blur" time="0.0520000000">
+        </testcase>
+    </testsuite>
+</testsuites>
