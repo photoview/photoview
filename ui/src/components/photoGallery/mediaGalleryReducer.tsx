@@ -70,19 +70,28 @@ export function mediaGalleryReducer(
 }
 
 export interface MediaGalleryPopStateEvent extends PopStateEvent {
-  state: MediaGalleryState
+  state: MediaGalleryState & { groupId?: string }
 }
 
+// groupId tells apart several independent galleries on one page (the search
+// results page renders one per album). Every mounted gallery listens on the
+// same global popstate event, so without it going back would open present
+// mode in all of them at once. Pages with a single gallery can omit it.
 export const urlPresentModeSetupHook = ({
   dispatchMedia,
   openPresentMode,
+  groupId,
 }: {
   dispatchMedia: React.Dispatch<GalleryAction>
   openPresentMode: (event: MediaGalleryPopStateEvent) => void
+  groupId?: string
 }) => {
   useEffect(() => {
     const urlChangeListener = (event: MediaGalleryPopStateEvent) => {
-      if (event.state.presenting === true) {
+      // Only this group's own entry opens it, but any other state closes it,
+      // so a gallery left presenting doesn't stay open when navigating back
+      // past it.
+      if (event.state?.presenting === true && event.state.groupId === groupId) {
         openPresentMode(event)
       } else {
         dispatchMedia({ type: 'closePresentMode' })
@@ -91,7 +100,7 @@ export const urlPresentModeSetupHook = ({
 
     window.addEventListener('popstate', urlChangeListener)
 
-    history.replaceState({ presenting: false }, '')
+    history.replaceState({ presenting: false, groupId }, '')
 
     return () => {
       window.removeEventListener('popstate', urlChangeListener)
@@ -102,16 +111,18 @@ export const urlPresentModeSetupHook = ({
 export const openPresentModeAction = ({
   dispatchMedia,
   activeIndex,
+  groupId,
 }: {
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
   activeIndex: number
+  groupId?: string
 }) => {
   dispatchMedia({
     type: 'openPresentMode',
     activeIndex: activeIndex,
   })
 
-  history.pushState({ presenting: true, activeIndex }, '')
+  history.pushState({ presenting: true, activeIndex, groupId }, '')
 }
 
 export const closePresentModeAction = ({
