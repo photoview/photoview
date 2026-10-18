@@ -109,18 +109,17 @@ func TestScannerQueueJobOnQueue(t *testing.T) {
 }
 
 func TestChangeScannerConcurrentWorkers(t *testing.T) {
-	originalQueue := global_scanner_queue
+	// Save and restore only the fields this test changes. ScannerQueue contains a
+	// sync.Mutex, so copying the whole queue would trip go vet's copylocks check.
+	originalIdleChan := global_scanner_queue.idle_chan
+	originalMaxTasks := global_scanner_queue.settings.max_concurrent_tasks
 	t.Cleanup(func() {
-		global_scanner_queue = originalQueue
+		global_scanner_queue.idle_chan = originalIdleChan
+		global_scanner_queue.settings.max_concurrent_tasks = originalMaxTasks
 	})
 
-	global_scanner_queue = ScannerQueue{
-		idle_chan:   make(chan bool, 1),
-		in_progress: make([]ScannerJob, 0),
-		up_next:     make([]ScannerJob, 0),
-		db:          nil,
-		settings:    ScannerQueueSettings{max_concurrent_tasks: 3},
-	}
+	global_scanner_queue.idle_chan = make(chan bool, 1)
+	global_scanner_queue.settings.max_concurrent_tasks = 3
 
 	ChangeScannerConcurrentWorkers(42)
 

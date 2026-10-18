@@ -90,6 +90,9 @@ func CloseScannerQueue() {
 	global_scanner_queue.CloseBackgroundWorker()
 }
 
+// ChangeScannerConcurrentWorkers updates the maximum number of album scans the
+// queue may run in parallel, then wakes the background worker so the new limit
+// is applied without waiting for a running job to finish.
 func ChangeScannerConcurrentWorkers(newMaxWorkers int) {
 	global_scanner_queue.mutex.Lock()
 
