@@ -113,7 +113,10 @@ func ScanAlbum(ctx scanner_task.TaskContext) error {
 
 	changedMedia := make([]*models.Media, 0)
 	for i, media := range albumMedia {
-		mediaData := media_encoding.NewEncodeMediaData(media)
+		// The album cache already resolved the media type of every file in
+		// `albumMedia` while finding them, so reuse it instead of asking
+		// exiftool for the same path a second time.
+		mediaData := media_encoding.NewEncodeMediaData(media, ctx.GetCache().GetMediaType(media.Path))
 
 		if err := scanMedia(ctx, media, &mediaData, i, len(albumMedia)); err != nil {
 			scanner_utils.ScannerError(ctx, "Error scanning media for album (%d) file (%s): %s\n", ctx.GetAlbum().ID, media.Path, err)
