@@ -92,7 +92,7 @@
         "title": "Від’єднати світлини з обличчями"
       },
       "merge_face_groups": {
-        "destination_description": "",
+        "destination_description": "Усі світлини цієї групи обличь будуть обʼєднані з обраною групою.",
         "destination_table": {
           "title": "Оберіть обличчя призначення"
         },
