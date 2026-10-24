@@ -11,7 +11,7 @@ import (
 func MigrateForExifGPSCorrection(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&models.MediaEXIF{}).
-			Where("ABS(gps_longitude) > ?", 90).
+			Where("ABS(gps_longitude) > ?", 180).
 			Or("ABS(gps_latitude) > ?", 90).
 			Updates(map[string]interface{}{
 				"gps_latitude":  nil,
