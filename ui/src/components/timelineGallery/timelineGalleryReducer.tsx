@@ -1,4 +1,5 @@
 import React from 'react'
+import { DateTime } from 'luxon'
 import { myTimeline_myTimeline } from './__generated__/myTimeline'
 import { TimelineGroup, TimelineGroupAlbum } from './TimelineGallery'
 import { GalleryAction } from '../photoGallery/mediaGalleryReducer'
@@ -197,12 +198,8 @@ function convertMediaToTimelineGroups(
   let albums: TimelineGroupAlbum[] = []
   let nextAlbum: TimelineGroupAlbum | null = null
 
-  const sameDay = (a: string, b: string) => {
-    return (
-      a.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00') ==
-      b.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00')
-    )
-  }
+  const localDay = (date: string) =>
+    DateTime.fromISO(date).startOf('day').toFormat("yyyy-MM-dd'T'HH:mm:ss")
 
   for (const media of timelineMedia) {
     if (nextAlbum == null) {
@@ -215,11 +212,11 @@ function convertMediaToTimelineGroups(
     }
 
     // if date changes
-    if (!sameDay(nextAlbum.media[0].date, media.date)) {
+    if (localDay(nextAlbum.media[0].date) !== localDay(media.date)) {
       albums.push(nextAlbum)
 
       timelineGroups.push({
-        date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+        date: localDay(albums[0].media[0].date),
         albums: albums,
       })
       albums = []
@@ -250,7 +247,7 @@ function convertMediaToTimelineGroups(
     albums.push(nextAlbum)
 
     timelineGroups.push({
-      date: albums[0].media[0].date.replace(/\d{2}:\d{2}:\d{2}/, '00:00:00'),
+      date: localDay(albums[0].media[0].date),
       albums: albums,
     })
   }

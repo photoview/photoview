@@ -41,12 +41,19 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		return nil, fmt.Errorf("get user from database: %w", err)
 	}
 
-	scanner_queue.AddUserToQueue(&user)
+	scanErr := scanner_queue.AddUserToQueue(&user)
 
+	// Discovery errors are per-root: albums under healthy roots are still
+	// queued, so the scan has started even when some roots failed. Report the
+	// failures instead of discarding them, rather than reporting a clean start.
 	startMessage := "Scanner started"
+	if scanErr != nil {
+		startMessage = fmt.Sprintf("Scanner started, some albums could not be queued: %v", scanErr)
+	}
+
 	return &models.ScannerResult{
 		Finished: false,
-		Success:  true,
+		Success:  scanErr == nil,
 		Message:  &startMessage,
 	}, nil
 }
