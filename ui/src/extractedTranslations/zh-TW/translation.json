@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "相簿",
         "media": "媒體"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,14 @@
   "routes": {
     "page_not_found": "找不到頁面"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "允許同時執行的掃描工作數量上限",
@@ -166,6 +175,10 @@
       "language_selector": {
         "placeholder": "選擇語言"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": "依系統環境"
@@ -179,7 +192,8 @@
         },
         "title": "佈景主題偏好設定"
       },
-      "title": "使用者偏好設定"
+      "title": "使用者偏好設定",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "Álbumes",
         "media": ""
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,16 @@
   "routes": {
     "page_not_found": "Página no encontrada"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_one": "",
+    "truncated_many": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "La cantidad máxima de tareas de escaneo que pueden ejecutarse al mismo tiempo",
@@ -166,6 +177,10 @@
       "language_selector": {
         "placeholder": "Seleccionar idioma"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": ""
@@ -179,7 +194,8 @@
         },
         "title": ""
       },
-      "title": "Preferencias de usuario"
+      "title": "Preferencias de usuario",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
