@@ -80,6 +80,26 @@ func (c TaskContext) WithValue(key, val interface{}) TaskContext {
 	}
 }
 
+// WithoutCancel returns a context with the same album, cache and database
+// that is not cancelled when c is.
+//
+// A scan job is cancelled cooperatively: it stops before its next file, never
+// part-way through one. The checks for that live in the loops over files. The
+// work on a single file runs under this context instead, so cancelling the job
+// cannot stop a file's task pipeline between two of its steps or abort its
+// database transaction - both of which would leave the file half processed.
+// The database handle is re-bound to the new context, since the one stored in
+// c would otherwise still carry c's cancellation into every query.
+func (c TaskContext) WithoutCancel() TaskContext {
+	detached := TaskContext{Context: context.WithoutCancel(c.Context)}
+
+	if db, ok := c.Context.Value(taskCtxKeyDatabase).(*gorm.DB); ok && db != nil {
+		detached = detached.WithValue(taskCtxKeyDatabase, db.WithContext(detached.Context))
+	}
+
+	return detached
+}
+
 func (c TaskContext) WithDB(db *gorm.DB) TaskContext {
 	// Allow db to be nil in tests
 	if db == nil && flag.Lookup("test.v") != nil {
