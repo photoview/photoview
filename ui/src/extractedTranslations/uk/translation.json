@@ -105,7 +105,7 @@
         "title": "Від’єднати світлини з обличчями"
       },
       "merge_face_groups": {
-        "destination_description": "",
+        "destination_description": "Оберіть групу облич, до якої буде обʼєднано інші групи.",
         "destination_table": {
           "title": "Оберіть обличчя призначення"
         },

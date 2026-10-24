@@ -112,6 +112,7 @@ const InitialSetupPage = () => {
           <TextField
             wrapperClassName="my-4"
             fullWidth
+            type="password"
             {...register('password', { required: true })}
             label={t('login_page.field.password', 'Password')}
             error={
@@ -133,7 +134,7 @@ const InitialSetupPage = () => {
               '/path/to/photos'
             )}
             error={
-              formErrors.password?.type == 'required'
+              formErrors.rootPath?.type == 'required'
                 ? 'Please enter a photo path'
                 : undefined
             }
