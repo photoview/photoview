@@ -178,10 +178,8 @@ test('drops the thumbnails once the result list gets long', async () => {
     { timeout: 15000 }
   )
 
-  expect(
-    screen.queryAllByRole('img'),
-    'a list this long renders as compact text rows'
-  ).toHaveLength(0)
+  // a list this long renders as compact text rows
+  expect(screen.queryAllByRole('img')).toHaveLength(0)
 }, 20000)
 
 test('keeps the thumbnails for a short result list', async () => {
