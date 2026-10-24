@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Nulstil coverbillede",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Set som album coverbillede",
       "title_placeholder": "Albumtitel"
     },
