@@ -166,6 +166,8 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           docker run --name i18n photoview/ui npm run extractTranslations -- --fail-on-warnings
+          # The trailing `/.` copies the directory's contents. `docker cp` runs no shell, so `*` would
+          # be taken literally: https://docs.docker.com/reference/cli/docker/container/cp/
           docker cp i18n:/app/ui/src/extractedTranslations/. ./ui/src/extractedTranslations/
           if [[ -n "$(git status --porcelain -- ui/src/extractedTranslations)" ]]; then
             # shellcheck disable=SC2016
