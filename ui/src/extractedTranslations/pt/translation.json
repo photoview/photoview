@@ -15,6 +15,18 @@
       "type": "Tipo"
     }
   },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "filter_truncated": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": ""
+  },
   "general": {
     "action": {
       "add": "Adicionar",
@@ -22,6 +34,7 @@
       "remove": "Remover",
       "save": "Guardar"
     },
+    "close": "",
     "loading": {
       "album": "Carregar Álbum",
       "default": "Carregar...",
@@ -165,6 +178,11 @@
       },
       "language_selector": {
         "placeholder": "Selecionar Idioma"
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
       },
       "theme": {
         "auto": {

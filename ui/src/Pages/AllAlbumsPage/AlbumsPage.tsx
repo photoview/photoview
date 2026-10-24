@@ -7,6 +7,7 @@ import { getMyAlbums, getMyAlbumsVariables } from './__generated__/getMyAlbums'
 import useURLParameters from '../../hooks/useURLParameters'
 import useOrderingParams from '../../hooks/useOrderingParams'
 import AlbumFilter from '../../components/album/AlbumFilter'
+import MobileAlbumTreeButton from '../../components/albumTree/MobileAlbumTreeButton'
 
 const getAlbumsQuery = gql`
   query getMyAlbums($orderBy: String, $orderDirection: OrderDirection) {
@@ -59,12 +60,15 @@ const AlbumsPage = () => {
 
   return (
     <Layout title="Albums">
-      <AlbumFilter
-        onlyFavorites={false}
-        ordering={orderParams}
-        setOrdering={orderParams.setOrdering}
-        sortingOptions={sortingOptions}
-      />
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <AlbumFilter
+          onlyFavorites={false}
+          ordering={orderParams}
+          setOrdering={orderParams.setOrdering}
+          sortingOptions={sortingOptions}
+        />
+        <MobileAlbumTreeButton />
+      </div>
       <AlbumBoxes error={error} albums={data?.myAlbums} />
     </Layout>
   )
