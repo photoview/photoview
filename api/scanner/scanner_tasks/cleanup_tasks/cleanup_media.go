@@ -13,8 +13,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// CleanupMedia removes media entries from the database that are no longer present on the filesystem
-func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error {
+// CleanupMedia removes media entries from the database that are no longer present on the filesystem.
+// unscannedPaths lists files that are still on disk but failed to scan, so they are missing from
+// albumMedia; their entries are kept.
+func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media, unscannedPaths []string) []error {
 	albumMediaIds := make([]int, len(albumMedia))
 	for i, media := range albumMedia {
 		albumMediaIds[i] = media.ID
@@ -28,6 +30,15 @@ func CleanupMedia(db *gorm.DB, albumId int, albumMedia []*models.Media) []error 
 	// Select media from database that was not found on hard disk
 	if len(albumMedia) > 0 {
 		query = query.Where("NOT id IN (?)", albumMediaIds)
+	}
+
+	if len(unscannedPaths) > 0 {
+		unscannedHashes := make([]string, len(unscannedPaths))
+		for i, mediaPath := range unscannedPaths {
+			unscannedHashes[i] = models.MD5Hash(mediaPath)
+		}
+
+		query = query.Where("NOT path_hash IN (?)", unscannedHashes)
 	}
 
 	if err := query.Find(&mediaList).Error; err != nil {

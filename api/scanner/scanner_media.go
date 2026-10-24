@@ -41,7 +41,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 
 	mediaType := cache.GetMediaType(mediaPath)
 	if mediaType == media_type.TypeUnknown {
-		return nil, false, fmt.Errorf("could not determine if media %s of type %s was photo or video", mediaPath, mediaType)
+		return nil, false, fmt.Errorf("could not determine if media %s of type %s was photo or video: %w", mediaPath, mediaType, media_type.ErrUnknownType)
 	}
 
 	var mediaTypeText models.MediaType
