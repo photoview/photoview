@@ -17,14 +17,15 @@ func TestExifMigration(t *testing.T) {
 
 	// Create test data
 	exifEntries := []models.MediaEXIF{
-		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(90.0)},   // Invalid GPSLatitude
-		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-90.0)}, // Invalid GPSLatitude
-		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(90.1)},   // Invalid GPSLongitude
-		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-90.1)}, // Invalid GPSLongitude
-		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(90.0)},   // Valid GPS data
-		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-90.0)}, // Valid GPS data
-		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(90.1)},   // Invalid GPSLatitude and GPSLongitude
-		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-90.1)}, // Invalid GPSLatitude and GPSLongitude
+		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(180.0)},   // Invalid GPSLatitude
+		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-180.0)}, // Invalid GPSLatitude
+		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(180.1)},   // Invalid GPSLongitude
+		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-180.1)}, // Invalid GPSLongitude
+		{GPSLatitude: floatPtr(90.0), GPSLongitude: floatPtr(180.0)},   // Valid GPS data
+		{GPSLatitude: floatPtr(-90.0), GPSLongitude: floatPtr(-180.0)}, // Valid GPS data
+		{GPSLatitude: floatPtr(35.7), GPSLongitude: floatPtr(139.7)},   // Valid GPS data, longitude above 90
+		{GPSLatitude: floatPtr(90.1), GPSLongitude: floatPtr(180.1)},   // Invalid GPSLatitude and GPSLongitude
+		{GPSLatitude: floatPtr(-90.1), GPSLongitude: floatPtr(-180.1)}, // Invalid GPSLatitude and GPSLongitude
 	}
 
 	// Insert test data
@@ -39,14 +40,19 @@ func TestExifMigration(t *testing.T) {
 	var results []models.MediaEXIF
 	assert.NoError(t, db.Find(&results).Error)
 
+	validEntries := 0
 	for _, entry := range results {
 		if entry.GPSLatitude != nil {
 			assert.LessOrEqual(t, math.Abs(*entry.GPSLatitude), 90.0, "GPSLatitude should be within [-90, 90]: %+v", entry)
 		}
 		if entry.GPSLongitude != nil {
-			assert.LessOrEqual(t, math.Abs(*entry.GPSLongitude), 90.0, "GPSLongitude should be within [-90, 90]: %+v", entry)
+			assert.LessOrEqual(t, math.Abs(*entry.GPSLongitude), 180.0, "GPSLongitude should be within [-180, 180]: %+v", entry)
+		}
+		if entry.GPSLatitude != nil && entry.GPSLongitude != nil {
+			validEntries++
 		}
 	}
+	assert.Equal(t, 3, validEntries, "valid GPS data should be kept")
 }
 
 func floatPtr(f float64) *float64 {
