@@ -3,6 +3,7 @@ package exiftool
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,6 +26,9 @@ type Exiftool struct {
 	stderr   *MarkReader
 
 	closeOnce sync.Once
+	// killed is set when the process is force-terminated after a deadline.
+	// Close then reaps it without sending -stay_open False.
+	killed bool
 }
 
 const marker = "{ready}\n"
@@ -111,12 +115,25 @@ func (e *Exiftool) Close() (err error) {
 		defer e.cmd.Wait()
 		defer e.stdin.Close()
 
+		if e.killed {
+			return
+		}
+
 		if err = e.rawSendCommand("-stay_open", "False"); err != nil {
 			_ = e.cmd.Process.Kill()
 		}
 	})
 
 	return
+}
+
+// terminate force-kills the persistent process so a read blocked on the
+// response marker can unwind. Close must still be called to reap it.
+func (e *Exiftool) terminate() {
+	e.killed = true
+	if e.cmd != nil && e.cmd.Process != nil {
+		_ = e.cmd.Process.Kill()
+	}
 }
 
 func (e *Exiftool) rawSendCommand(args ...string) error {
@@ -239,6 +256,26 @@ func (e *Exiftool) QueryJSONTagsByNumber(file string, value any) error {
 	}
 
 	return nil
+}
+
+// QueryJSONTagsByNumberContext queries tags like QueryJSONTagsByNumber.
+// If ctx ends before the response marker arrives, the persistent process is
+// force-terminated and this call waits until the blocked reader unwinds.
+// The instance is unusable after a context error; call Close to reap it.
+func (e *Exiftool) QueryJSONTagsByNumberContext(ctx context.Context, file string, value any) error {
+	done := make(chan error, 1)
+	go func() {
+		done <- e.QueryJSONTagsByNumber(file, value)
+	}()
+
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		e.terminate()
+		<-done
+		return fmt.Errorf("query %q tags error: %w", file, ctx.Err())
+	}
 }
 
 // SaveJPEGPreview saves a preview jpeg from `src` to `previewOutput`.
