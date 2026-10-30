@@ -1,4 +1,5 @@
 import React from 'react'
+import { useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { API_ENDPOINT } from '../../apolloClient'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
@@ -15,7 +16,8 @@ export const generateDownloadUrl = (
     title: string
     description: string
     purpose: string
-  }
+  },
+  pathname = location.pathname
 ) => {
   const commonUrl = `${API_ENDPOINT}/download/album/${albumID}/${downloadType.purpose}`
 
@@ -23,7 +25,7 @@ export const generateDownloadUrl = (
     return commonUrl
   }
 
-  const shareToken = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+  const shareToken = pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
   if (shareToken == null) {
     return commonUrl
   }
@@ -33,6 +35,7 @@ export const generateDownloadUrl = (
 
 const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
 
   const downloads = [
     {
@@ -76,7 +79,7 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
     <SidebarTable.Row
       key={x.purpose}
       onClick={() => {
-        const url = generateDownloadUrl(albumID, x)
+        const url = generateDownloadUrl(albumID, x, pathname)
         return (location.href = url)
       }}
       tabIndex={0}

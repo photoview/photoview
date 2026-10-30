@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import SidebarDownloadAlbum, {
   generateDownloadUrl,
 } from './SidebarDownloadAlbum'
@@ -26,7 +27,11 @@ describe('SidebarDownloadAlbum', () => {
   test('render downloadAlbum, unauthorized', () => {
     authToken.mockImplementation(() => null)
 
-    render(<SidebarDownloadAlbum albumID="30" />)
+    render(
+      <MemoryRouter initialEntries={['/album/30']}>
+        <SidebarDownloadAlbum albumID="30" />
+      </MemoryRouter>
+    )
 
     // check if the download is the title
     const h2 = document.querySelector('h2')
@@ -45,6 +50,26 @@ describe('SidebarDownloadAlbum', () => {
       description: '',
       purpose: 'original',
     })
+
+    expect(url).toContain('/download/album/30/original?token=qDSL5I1N')
+  })
+
+  test('generate correct url, unauthorized as share with basename', () => {
+    Object.defineProperty(window, 'location', {
+      value: new URL('http://localhost:1234/photos/share/qDSL5I1N'),
+      configurable: true,
+    })
+
+    authToken.mockImplementation(() => null)
+    const url = generateDownloadUrl(
+      '30',
+      {
+        title: 'testAlbum',
+        description: '',
+        purpose: 'original',
+      },
+      '/share/qDSL5I1N'
+    )
 
     expect(url).toContain('/download/album/30/original?token=qDSL5I1N')
   })
@@ -73,7 +98,11 @@ describe('SidebarDownloadAlbum', () => {
 
     authToken.mockImplementation(() => 'token-here')
 
-    render(<SidebarDownloadAlbum albumID="30" />)
+    render(
+      <MemoryRouter initialEntries={['/album/30']}>
+        <SidebarDownloadAlbum albumID="30" />
+      </MemoryRouter>
+    )
 
     await userEvent.click(screen.getByText('Originals'))
     expect(window.location.href).toContain('/download/album/30/original')
