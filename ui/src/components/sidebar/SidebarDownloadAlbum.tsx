@@ -17,16 +17,18 @@ export const generateDownloadUrl = (
     purpose: string
   }
 ) => {
-  let url = `${API_ENDPOINT}/download/album/${albumID}/${downloadType.purpose}`
-  if (authToken() == null) {
-    // Try to get share token if not authorized
-    const token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
-    if (token) {
-      // add token if found previously
-      url += `?token=${token[1]}`
-    }
+  const commonUrl = `${API_ENDPOINT}/download/album/${albumID}/${downloadType.purpose}`
+
+  if (authToken() != null) {
+    return commonUrl
   }
-  return url
+
+  const shareToken = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+  if (shareToken == null) {
+    return commonUrl
+  }
+
+  return `${commonUrl}?token=${shareToken[1]}`
 }
 
 const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
