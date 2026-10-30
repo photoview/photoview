@@ -23,61 +23,96 @@ describe('AlbumTitle', () => {
     authToken.mockImplementation(() => null)
     const { queryByText } = render(
       <MockedProvider mocks={[]}>
-        <AlbumTitle disableLink />
-      </MockedProvider>
-    )
-    expect(queryByText('Album options')).not.toBeInTheDocument()
-  })
-
-  test('render albumTitle - album given, disableLink=true, unauthorized', async () => {
-    authToken.mockImplementation(() => null)
-
-    render(
-      <MockedProvider mocks={[]}>
-        <MemoryRouter>
-          <AlbumTitle album={album} disableLink={true} />
+        <MemoryRouter initialEntries={['/']}>
+          <AlbumTitle disableLink />
         </MemoryRouter>
       </MockedProvider>
     )
-    await waitFor(() => {
-      // check if the string "Album options" is rendered / the settings button is visible
-      const button = document.querySelector('button')
-      const title = button?.getAttribute('title')
-      expect(title).toBe('Album options')
-
-      // check if the name of the album is in span
-      const span = document.querySelector('h1 > span')
-      expect(span?.textContent).toMatch(/testAlbum/)
-
-      // check if the name of the album is not in a link
-      const linkSpan = document.querySelector('h1 > link > span')
-      expect(linkSpan).toBeNull()
-    })
+    expect(queryByText('Album options')).not.toBeInTheDocument()
+    expect(queryByText('testAlbum')).not.toBeInTheDocument()
   })
 
-  test('render albumTitle - album given, disableLink=false, unauthorized', async () => {
+  test('render albumTitle - album given, disableLink=false, unauthorized, non-shared album', async () => {
     authToken.mockImplementation(() => null)
 
     render(
       <MockedProvider mocks={[]}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/']}>
           <AlbumTitle album={album} disableLink={false} />
         </MemoryRouter>
       </MockedProvider>
     )
+
     await waitFor(() => {
-      // check if the string "Album options" is rendered / the settings button is visible
-      const button = document.querySelector('button')
-      const title = button?.getAttribute('title')
-      expect(title).toBe('Album options')
+      expect(
+        screen.queryByRole('button', { name: 'Album options' })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
 
-      // check if the name of the album is in span
-      const span = document.querySelector('h1 > span')
-      expect(span).toBeNull()
+  test('render albumTitle - album given, disableLink=false, authorized, non-shared album', async () => {
+    authToken.mockImplementation(() => 'token-here')
 
-      // check if the name of the album is in a link
-      const linkSpan = document.querySelector('h1 > a > span')
-      expect(linkSpan?.textContent).toMatch(/testAlbum/)
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Album options' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('render albumTitle - album given, disableLink=false, authorized, shared album', async () => {
+    authToken.mockImplementation(() => 'token-here')
+
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/share/album/30']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Album options' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('render albumTitle - album given, disableLink=false, unauthorized, shared album', async () => {
+    authToken.mockImplementation(() => null)
+
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/share/album/30']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Album options' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
     })
   })
 
