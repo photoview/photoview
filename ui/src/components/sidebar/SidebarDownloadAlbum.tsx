@@ -1,15 +1,41 @@
 import React from 'react'
+import { useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { API_ENDPOINT } from '../../apolloClient'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
+import { authToken } from '../../helpers/authentication'
 
 type SidebarAlbumDownladProps = {
   albumID: string
 }
 
+export const generateDownloadUrl = (
+  albumID: string,
+  downloadType: {
+    title: string
+    description: string
+    purpose: string
+  },
+  pathname = location.pathname
+) => {
+  const commonUrl = `${API_ENDPOINT}/download/album/${albumID}/${downloadType.purpose}`
+
+  if (authToken() != null) {
+    return commonUrl
+  }
+
+  const shareToken = pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+  if (shareToken == null) {
+    return commonUrl
+  }
+
+  return `${commonUrl}?token=${shareToken[1]}`
+}
+
 const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
 
   const downloads = [
     {
@@ -52,9 +78,10 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
   const downloadRows = downloads.map(x => (
     <SidebarTable.Row
       key={x.purpose}
-      onClick={() =>
-        (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
-      }
+      onClick={() => {
+        const url = generateDownloadUrl(albumID, x, pathname)
+        return (location.href = url)
+      }}
       tabIndex={0}
     >
       <td className="pl-4 py-2">{`${x.title}`}</td>

@@ -1,0 +1,177 @@
+import React from 'react'
+import { vi } from 'vitest'
+import { render, waitFor, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MockedProvider } from '@apollo/client/testing'
+import AlbumTitle, { ALBUM_PATH_QUERY } from './AlbumTitle'
+import { MemoryRouter } from 'react-router'
+import { SidebarContext } from '../sidebar/Sidebar'
+
+import * as authentication from '../../helpers/authentication'
+
+vi.mock('../../helpers/authentication.ts')
+
+const authToken = vi.mocked(authentication.authToken)
+
+const album = {
+  id: '30',
+  title: 'testAlbum',
+}
+
+describe('AlbumTitle', () => {
+  test('render albumTitle - no album given, unauthorized', () => {
+    authToken.mockImplementation(() => null)
+    const { queryByText } = render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/']}>
+          <AlbumTitle disableLink />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+    expect(queryByText('Album options')).not.toBeInTheDocument()
+    expect(queryByText('testAlbum')).not.toBeInTheDocument()
+  })
+
+  test('render albumTitle - album given, disableLink=false, unauthorized, non-shared album', async () => {
+    authToken.mockImplementation(() => null)
+
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Album options' })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('render albumTitle - album given, disableLink=false, authorized, non-shared album', async () => {
+    authToken.mockImplementation(() => 'token-here')
+
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Album options' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('render albumTitle - album given, disableLink=false, authorized, shared album', async () => {
+    authToken.mockImplementation(() => 'token-here')
+
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/share/album/30']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Album options' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('render albumTitle - album given, disableLink=false, unauthorized, shared album', async () => {
+    authToken.mockImplementation(() => null)
+
+    render(
+      <MockedProvider mocks={[]}>
+        <MemoryRouter initialEntries={['/share/album/30']}>
+          <AlbumTitle album={album} disableLink={false} />
+        </MemoryRouter>
+      </MockedProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Album options' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: 'testAlbum' })
+      ).toBeInTheDocument()
+    })
+  })
+
+  test('render albumTitle - album given, disableLink=true, authorized, breadcrumb', async () => {
+    authToken.mockImplementation(() => 'token-here')
+    const subfolderAlbumMock = {
+      request: { query: ALBUM_PATH_QUERY, variables: { id: '30' } },
+      result: {
+        data: {
+          album: {
+            id: '30',
+            title: 'testAlbum',
+            path: [{ id: '2', title: 'demoAlbum', __typename: 'Album' }],
+            __typename: 'Album',
+          },
+        },
+      },
+    }
+
+    const updateSidebarMock = vi.fn()
+    const setPinnedMock = vi.fn()
+
+    const sidebarContextProvider = {
+      updateSidebar: updateSidebarMock,
+      setPinned: setPinnedMock,
+      content: <div>Hello, world!</div>,
+      pinned: false,
+    }
+
+    render(
+      <MockedProvider mocks={[subfolderAlbumMock]}>
+        <MemoryRouter>
+          <SidebarContext.Provider value={sidebarContextProvider}>
+            <AlbumTitle album={album} disableLink={true} />
+          </SidebarContext.Provider>
+        </MemoryRouter>
+      </MockedProvider>
+    )
+    await waitFor(() => {
+      // check if the string "Album options" is rendered / the settings button is visible
+      const button = document.querySelector('button')
+      const title = button?.getAttribute('title')
+      expect(title).toBe('Album options')
+
+      // check if the name of the album is in span
+      const span = document.querySelector('h1 > span')
+      expect(span?.textContent).toMatch(/testAlbum/)
+
+      // check if the name of the album is not in a link
+      const linkSpan = document.querySelector('h1 > link > span')
+      expect(linkSpan).toBeNull()
+
+      // check if the breadcrumb is rendered
+      const breadcrumb = document.querySelector('nav > ol > li > a')
+      expect(breadcrumb?.textContent).toMatch(/demoAlbum/)
+    })
+
+    await userEvent.click(screen.getByTitle('Album options'))
+
+    expect(updateSidebarMock).toHaveBeenCalled()
+  })
+})

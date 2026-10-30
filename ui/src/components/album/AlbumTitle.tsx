@@ -7,6 +7,7 @@ import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { albumPathQuery } from './__generated__/albumPathQuery'
 import useDelay from '../../hooks/useDelay'
+import { useLocation, matchPath } from 'react-router-dom'
 
 import { ReactComponent as GearIcon } from './icons/gear.svg'
 import { tailwindClassNames } from '../../helpers/utils'
@@ -26,7 +27,7 @@ export const BreadcrumbList = styled.ol<{ hideLastArrow?: boolean }>`
   }
 `
 
-const ALBUM_PATH_QUERY = gql`
+export const ALBUM_PATH_QUERY = gql`
   query albumPathQuery($id: ID!) {
     album(id: $id) {
       id
@@ -50,6 +51,12 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
   const [fetchPath, { data: pathData }] =
     useLazyQuery<albumPathQuery>(ALBUM_PATH_QUERY)
   const { updateSidebar } = useContext(SidebarContext)
+
+  const location = useLocation()
+  const isSharedAlbum = !!matchPath(
+    { path: '/share/*', end: false },
+    location.pathname
+  )
 
   useEffect(() => {
     if (!album) return
@@ -103,13 +110,15 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
         </nav>
         <h1 className="text-2xl truncate min-w-0">{title}</h1>
       </div>
-      {authToken() && (
+      {(authToken() || isSharedAlbum) && (
         <button
           title="Album options"
           aria-label="Album options"
           className={tailwindClassNames(buttonStyles({}), 'px-2 py-2 ml-2')}
           onClick={() => {
-            updateSidebar(<AlbumSidebar albumId={album.id} />)
+            updateSidebar(
+              <AlbumSidebar albumId={album.id} albumTitle={album.title} />
+            )
           }}
         >
           <GearIcon />
