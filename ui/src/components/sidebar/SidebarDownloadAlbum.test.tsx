@@ -12,6 +12,17 @@ vi.mock('../../helpers/authentication.ts')
 const authToken = vi.mocked(authentication.authToken)
 
 describe('SidebarDownloadAlbum', () => {
+  const originalLocationDescriptor = Object.getOwnPropertyDescriptor(
+    window,
+    'location'
+  )
+
+  afterEach(() => {
+    if (originalLocationDescriptor) {
+      Object.defineProperty(window, 'location', originalLocationDescriptor)
+    }
+  })
+
   test('render downloadAlbum, unauthorized', () => {
     authToken.mockImplementation(() => null)
 
@@ -55,6 +66,11 @@ describe('SidebarDownloadAlbum', () => {
   })
 
   test('render downloadAlbum and click the original "button", authorized', async () => {
+    Object.defineProperty(window, 'location', {
+      value: new URL('http://localhost:1234/album/30'),
+      configurable: true,
+    })
+
     authToken.mockImplementation(() => 'token-here')
 
     render(<SidebarDownloadAlbum albumID="30" />)
