@@ -87,12 +87,7 @@ func (r *mediaResolver) Type(ctx context.Context, obj *models.Media) (models.Med
 
 // Shares is the resolver for the shares field.
 func (r *mediaResolver) Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error) {
-	var shareTokens []*models.ShareToken
-	if err := r.DB(ctx).Where("media_id = ?", obj.ID).Find(&shareTokens).Error; err != nil {
-		return nil, fmt.Errorf("get shares for media (%s): %w", obj.Path, err)
-	}
-
-	return shareTokens, nil
+	return actions.ListMediaShares(r.DB(ctx), auth.UserFromContext(ctx), obj)
 }
 
 // Downloads is the resolver for the downloads field.

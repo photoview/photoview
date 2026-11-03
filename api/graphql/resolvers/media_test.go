@@ -208,3 +208,51 @@ func TestMediaQueryRejectsMediaTokenAfterMediaDeletion(t *testing.T) {
 	assert.EqualError(t, err, "share not found")
 	assert.Nil(t, media)
 }
+
+// A user who does not own a media item's album must not be able to favorite it,
+// and must not learn anything about it from the mutation's response.
+func TestFavoriteMediaRejectsForeignMedia(t *testing.T) {
+	fixtures := setupMediaTokenFixtures(t)
+	db := fixtures.resolver.DB(context.Background())
+	mutation := &mutationResolver{Resolver: fixtures.resolver.Resolver}
+
+	ctx := auth.AddUserToContext(context.Background(), fixtures.otherPerson)
+	media, err := mutation.FavoriteMedia(ctx, fixtures.media.ID, true)
+
+	assert.Error(t, err)
+	assert.Nil(t, media)
+
+	var rows int64
+	require.NoError(t, db.Model(&models.UserMediaData{}).
+		Where("user_id = ? AND media_id = ?", fixtures.otherPerson.ID, fixtures.media.ID).
+		Count(&rows).Error)
+	assert.Zero(t, rows, "no favorite row may be written for foreign media")
+
+	// The owner can still favorite their own media.
+	ownerCtx := auth.AddUserToContext(context.Background(), fixtures.user)
+	media, err = mutation.FavoriteMedia(ownerCtx, fixtures.media.ID, true)
+	require.NoError(t, err)
+	require.NotNil(t, media)
+	assert.Equal(t, fixtures.media.ID, media.ID)
+}
+
+// Share token values of a media item are only visible to the owner of its album.
+func TestMediaSharesOnlyVisibleToAlbumOwner(t *testing.T) {
+	fixtures := setupMediaTokenFixtures(t)
+	resolver := &mediaResolver{Resolver: fixtures.resolver.Resolver}
+
+	ownerCtx := auth.AddUserToContext(context.Background(), fixtures.user)
+	shares, err := resolver.Shares(ownerCtx, fixtures.media)
+	require.NoError(t, err)
+	require.Len(t, shares, 1)
+	assert.Equal(t, fixtures.mediaToken.Value, shares[0].Value)
+
+	otherCtx := auth.AddUserToContext(context.Background(), fixtures.otherPerson)
+	shares, err = resolver.Shares(otherCtx, fixtures.media)
+	require.NoError(t, err)
+	assert.Empty(t, shares, "another user must not receive share tokens")
+
+	shares, err = resolver.Shares(context.Background(), fixtures.media)
+	require.NoError(t, err)
+	assert.Empty(t, shares, "an anonymous caller must not receive share tokens")
+}

@@ -141,6 +141,30 @@ func ListAlbumShares(db *gorm.DB, user *models.User, albumID int) ([]*models.Sha
 	return shareTokens, nil
 }
 
+// ListMediaShares returns the share tokens of a media item. Like ListAlbumShares,
+// token values are only disclosed to administrators and to users who own the
+// media's album; any other caller receives an empty list.
+func ListMediaShares(db *gorm.DB, user *models.User, media *models.Media) ([]*models.ShareToken, error) {
+	if user == nil {
+		return []*models.ShareToken{}, nil
+	}
+	if !user.Admin {
+		ownsMedia, err := user.OwnsMedia(db, media)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to validate media album owner with database")
+		}
+		if !ownsMedia {
+			return []*models.ShareToken{}, nil
+		}
+	}
+
+	var shareTokens []*models.ShareToken
+	if err := db.Where("media_id = ?", media.ID).Find(&shareTokens).Error; err != nil {
+		return nil, errors.Wrap(err, "failed to list media share tokens")
+	}
+	return shareTokens, nil
+}
+
 func DeleteShareToken(db *gorm.DB, user *models.User, tokenValue string) (*models.ShareToken, error) {
 	token, err := getUserToken(db, user, tokenValue)
 	if err != nil {
