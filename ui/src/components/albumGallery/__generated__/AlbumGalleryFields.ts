@@ -30,6 +30,7 @@ export interface AlbumGalleryFields_subAlbums {
   __typename: "Album";
   id: string;
   title: string;
+  createdAt: string;
   /**
    * An image in this album used for previewing this album
    */
