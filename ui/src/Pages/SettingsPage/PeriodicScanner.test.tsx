@@ -65,3 +65,54 @@ test('Enable periodic scanner', async () => {
     expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
   })
 })
+
+test('Auto-save scan interval on blur', async () => {
+  const graphqlMocks = [
+    {
+      request: {
+        query: SCAN_INTERVAL_QUERY,
+      },
+      result: {
+        data: {
+          siteInfo: { periodicScanInterval: 7380, __typename: 'SiteInfo' },
+        },
+      },
+    },
+    {
+      request: {
+        query: SCAN_INTERVAL_MUTATION,
+        variables: { interval: 0 },
+      },
+      result: { data: { setPeriodicScanInterval: 0 } },
+    },
+    {
+      request: {
+        query: SCAN_INTERVAL_MUTATION,
+        variables: { interval: 456 * 60 },
+      },
+      result: { data: { setPeriodicScanInterval: 456 * 60 } },
+    },
+  ]
+
+  render(
+    <MockedProvider mocks={graphqlMocks} addTypename={true}>
+      <PeriodicScanner />
+    </MockedProvider>
+  )
+
+  const enableCheckbox = screen.getByLabelText('Enable periodic scanner')
+  const inputField = screen.getByLabelText('Interval value')
+
+  fireEvent.click(enableCheckbox)
+
+  await waitFor(() => {
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+  })
+
+  fireEvent.change(inputField, { target: { value: '456' } })
+  fireEvent.blur(inputField)
+
+  await waitFor(() => {
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+  })
+})
