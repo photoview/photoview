@@ -130,3 +130,29 @@ func TestRecognizeUnlabeledFacesOnlyReturnsOwnFaces(t *testing.T) {
 	}
 	assert.Equal(t, []int{aliceFace.ID}, ids)
 }
+
+// The lookup is sent in batches, as a single query with every id would exceed
+// the number of bound parameters SQLite accepts.
+func TestGetUserOwnedImageFacesWithManyIDs(t *testing.T) {
+	f := setupTwoTenantFixtures(t)
+
+	group := f.addFaceGroup(t, nil)
+	aliceFace := f.addFace(t, f.aliceMedia[0], group)
+	bobFace := f.addFace(t, f.bobMedia[0], group)
+
+	ids := make([]int, 0, 40000)
+	for id := 100; id < 40100; id++ {
+		ids = append(ids, id)
+	}
+	ids = append(ids, aliceFace.ID, bobFace.ID)
+
+	faces, err := getUserOwnedImageFaces(f.db, f.alice, ids)
+	require.NoError(t, err)
+	require.Len(t, faces, 1)
+	assert.Equal(t, aliceFace.ID, faces[0].ID)
+
+	admin := &models.User{Model: models.Model{ID: 1000}, Admin: true}
+	faces, err = getUserOwnedImageFaces(f.db, admin, ids)
+	require.NoError(t, err)
+	assert.Len(t, faces, 2)
+}

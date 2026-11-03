@@ -309,28 +309,29 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 	}
 
 	var updatedImageFaces []*models.ImageFace
+	var userOwnedImageFaces []*models.ImageFace
 
 	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		var err error
 		updatedImageFaces, err = face_detection.GlobalFaceDetector.RecognizeUnlabeledFaces(tx, user)
+		if err != nil {
+			return err
+		}
+
+		// Unlabeled face groups can hold faces from the pictures of other users. Only
+		// report the ones from pictures the user can access, as each face exposes its media.
+		updatedImageFaceIDs := make([]int, len(updatedImageFaces))
+		for i, imageFace := range updatedImageFaces {
+			updatedImageFaceIDs[i] = imageFace.ID
+		}
+
+		userOwnedImageFaces, err = getUserOwnedImageFaces(tx, user, updatedImageFaceIDs)
 
 		return err
 	})
 
 	if transactionError != nil {
 		return nil, transactionError
-	}
-
-	// Unlabeled face groups can hold faces from the pictures of other users. Only
-	// report the ones from pictures the user can access, as each face exposes its media.
-	updatedImageFaceIDs := make([]int, len(updatedImageFaces))
-	for i, imageFace := range updatedImageFaces {
-		updatedImageFaceIDs[i] = imageFace.ID
-	}
-
-	userOwnedImageFaces, err := getUserOwnedImageFaces(db, user, updatedImageFaceIDs)
-	if err != nil {
-		return nil, err
 	}
 
 	userOwnedImageFaceIDs := make(map[int]bool, len(userOwnedImageFaces))
