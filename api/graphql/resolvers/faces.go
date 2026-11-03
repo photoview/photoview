@@ -321,7 +321,31 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 		return nil, transactionError
 	}
 
-	return updatedImageFaces, nil
+	// Unlabeled face groups can hold faces from the pictures of other users. Only
+	// report the ones from pictures the user can access, as each face exposes its media.
+	updatedImageFaceIDs := make([]int, len(updatedImageFaces))
+	for i, imageFace := range updatedImageFaces {
+		updatedImageFaceIDs[i] = imageFace.ID
+	}
+
+	userOwnedImageFaces, err := getUserOwnedImageFaces(db, user, updatedImageFaceIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	userOwnedImageFaceIDs := make(map[int]bool, len(userOwnedImageFaces))
+	for _, imageFace := range userOwnedImageFaces {
+		userOwnedImageFaceIDs[imageFace.ID] = true
+	}
+
+	visibleImageFaces := make([]*models.ImageFace, 0, len(userOwnedImageFaces))
+	for _, imageFace := range updatedImageFaces {
+		if userOwnedImageFaceIDs[imageFace.ID] {
+			visibleImageFaces = append(visibleImageFaces, imageFace)
+		}
+	}
+
+	return visibleImageFaces, nil
 }
 
 // DetachImageFaces is the resolver for the detachImageFaces field.

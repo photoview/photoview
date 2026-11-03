@@ -18,7 +18,10 @@ var ErrFaceDetectorNotInitialized = errors.New("face detector not initialized")
 func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
 	if user.Admin {
 		var faceGroup models.FaceGroup
-		if err := db.Where("id = ?", faceGroupID).Find(&faceGroup).Error; err != nil {
+		if err := db.Where("id = ?", faceGroupID).Take(&faceGroup).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, fmt.Errorf("face group does not exist: %w", err)
+			}
 			return nil, err
 		}
 
@@ -48,8 +51,8 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 		Where(imageFacesIDInQuestion, imageFaceQuery)
 
 	var faceGroup models.FaceGroup
-	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+	if err := faceGroupQuery.Take(&faceGroup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("face group does not exist or is not owned by the user: %w", err)
 		}
 		return nil, err
