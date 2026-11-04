@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/photoview/photoview/api/graphql/models"
@@ -11,30 +12,37 @@ import (
 )
 
 // AddUser finds all root albums owned by user and queues them for scanning.
-// It does not block until scanning finishes.
+// It does not block until scanning finishes. Discovery errors are per-root:
+// albums found under healthy roots are still queued, and the failures are
+// returned joined together.
 func AddUser(db *gorm.DB, user *models.User) error {
 	if !queue.Initialized() {
 		return fmt.Errorf("scanner queue not initialized")
 	}
 
 	cache := scanner_cache.MakeAlbumCache()
-	albums, errs := FindAlbumsForUser(db, user, cache)
-	for _, err := range errs {
+	albums, discoveryErrs := FindAlbumsForUser(db, user, cache)
+
+	var errs []error
+	for _, err := range discoveryErrs {
 		if err != nil {
-			return fmt.Errorf("find albums for user (user_id: %d): %w", user.ID, err)
+			errs = append(errs, fmt.Errorf("find albums for user (user_id: %d): %w", user.ID, err))
 		}
 	}
 
 	for _, album := range albums {
 		if err := queue.SubmitAlbum(album, cache); err != nil {
-			return err
+			errs = append(errs, err)
+			break
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
-// AddAll queues every user's albums for scanning.
+// AddAll queues every user's albums for scanning. A failure for one user does
+// not stop the others from being queued; the failures are returned joined
+// together.
 func AddAll(db *gorm.DB) error {
 	if !queue.Initialized() {
 		return fmt.Errorf("scanner queue not initialized")
@@ -45,13 +53,14 @@ func AddAll(db *gorm.DB) error {
 		return fmt.Errorf("get all users from database: %w", err)
 	}
 
+	var errs []error
 	for _, user := range users {
 		if err := AddUser(db, user); err != nil {
-			return fmt.Errorf("add user to queue (user_id: %d): %w", user.ID, err)
+			errs = append(errs, fmt.Errorf("add user to queue (user_id: %d): %w", user.ID, err))
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // ProcessMedia (re)processes a single already-known media, submitting it to

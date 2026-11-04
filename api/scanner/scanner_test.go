@@ -1,6 +1,7 @@
 package scanner_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,8 +12,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/notification"
+	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/scanner/face_detection"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/scanner/queue"
 	"github.com/photoview/photoview/api/test_utils"
 	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
 )
@@ -283,11 +285,11 @@ func TestScanQueuesValidAlbumsWhenDiscoveryFails(t *testing.T) {
 		t.Fatal("bind root albums error:", err)
 	}
 
-	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+	if err := queue.Initialize(context.Background(), db); err != nil {
 		t.Fatal("initialize scanner queue error:", err)
 	}
-	discoveryErr := scanner_queue.AddUserToQueue(user)
-	scanner_queue.CloseScannerQueue()
+	discoveryErr := scanner.AddUser(db, user)
+	queue.Close()
 
 	if discoveryErr == nil {
 		t.Fatal("expected album discovery error")
@@ -341,11 +343,11 @@ func TestScanWithOnlyDiscoveryErrorsQueuesNoAlbums(t *testing.T) {
 		}
 	}()
 
-	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+	if err := queue.Initialize(context.Background(), db); err != nil {
 		t.Fatal("initialize scanner queue error:", err)
 	}
-	discoveryErr := scanner_queue.AddUserToQueue(user)
-	scanner_queue.CloseScannerQueue()
+	discoveryErr := scanner.AddUser(db, user)
+	queue.Close()
 
 	select {
 	case got := <-notifications:

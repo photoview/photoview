@@ -44,7 +44,7 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 		return nil, fmt.Errorf("get user from database: %w", err)
 	}
 
-	scanner.AddUser(db, &user)
+	scanErr := scanner.AddUser(db, &user)
 
 	// Discovery errors are per-root: albums under healthy roots are still
 	// queued, so the scan has started even when some roots failed. Report the

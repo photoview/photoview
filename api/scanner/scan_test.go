@@ -68,6 +68,40 @@ func TestAddAllQueuesEveryUser(t *testing.T) {
 	assert.NotZero(t, count2, "expected AddAll to have scanned user2's album, found 0 media")
 }
 
+// TestAddAllContinuesAfterUserFails guards against one user's bad root stopping
+// the users after it from being queued.
+func TestAddAllContinuesAfterUserFails(t *testing.T) {
+	test_utils.FilesystemTest(t)
+	db := test_utils.DatabaseTest(t)
+
+	pass := "1234"
+	failedUser, err := models.RegisterUser(db, "add_all_failed_user", &pass, true)
+	require.NoError(t, err)
+	healthyUser, err := models.RegisterUser(db, "add_all_healthy_user", &pass, true)
+	require.NoError(t, err)
+
+	missingRoot := &models.Album{Title: "missing root", Path: filepath.Join(t.TempDir(), "missing")}
+	require.NoError(t, db.Save(missingRoot).Error)
+	require.NoError(t, db.Model(failedUser).Association("Albums").Append(missingRoot))
+
+	albumDir := t.TempDir()
+	copyFixtureFile(t, "mount_merapi_volcano_indonesia.jpg", filepath.Join(albumDir, "photo.jpg"))
+	album := &models.Album{Title: "healthy album", Path: albumDir}
+	require.NoError(t, db.Save(album).Error)
+	require.NoError(t, db.Model(healthyUser).Association("Albums").Append(album))
+
+	require.NoError(t, face_detection.InitializeFaceDetector(db))
+
+	require.NoError(t, queue.Initialize(context.Background(), db))
+	addAllErr := scanner.AddAll(db)
+	queue.Close()
+	require.ErrorContains(t, addAllErr, missingRoot.Path)
+
+	var count int64
+	require.NoError(t, db.Model(&models.Media{}).Where("album_id = ?", album.ID).Count(&count).Error)
+	assert.NotZero(t, count, "expected AddAll to have scanned the healthy user's album, found 0 media")
+}
+
 // TestProcessMediaDoesNotDeleteSiblingMedia guards against the albumState.skipAfter
 // bug: ProcessMedia builds a throwaway, single-media albumState so it must not run
 // album-wide cleanup, which would otherwise treat every *other* media in the album as
