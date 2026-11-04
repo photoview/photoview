@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/test_utils"
+	"gorm.io/gorm"
 )
 
 func TestMain(m *testing.M) {
@@ -19,7 +21,7 @@ func TestMain(m *testing.M) {
 
 // TestQueueSubmittedAlbumsAreNotAbandonedOnClose checks that a burst of
 // AlbumRequests submitted right before Close() are never abandoned.
-// `incoming` is deliberately unbuffered: a send only returns once dispatch()
+// `albums` is deliberately unbuffered: a send only returns once dispatch()
 // has received it and, in that same select case (before it can next look at
 // quit), absorbed it into pendingAlbums - so "the send returned" already
 // means "this is in the queue", deterministically, not as a race dispatch()
@@ -29,15 +31,7 @@ func TestMain(m *testing.M) {
 func TestQueueSubmittedAlbumsAreNotAbandonedOnClose(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
-	q := &Queue{
-		ctx:            context.Background(),
-		db:             db,
-		incoming:       make(chan any),
-		quit:           make(chan struct{}),
-		done:           make(chan struct{}),
-		scanningAlbums: make(map[int]struct{}),
-	}
-	q.max.Store(1)
+	q := newQueue(context.Background(), db, 1)
 
 	go q.dispatch()
 
@@ -49,7 +43,7 @@ func TestQueueSubmittedAlbumsAreNotAbandonedOnClose(t *testing.T) {
 			t.Fatalf("create album %d: %v", i, err)
 		}
 
-		q.incoming <- AlbumRequest{Album: album, Cache: cache}
+		q.albums <- AlbumRequest{Album: album, Cache: cache}
 	}
 
 	close(q.quit)
@@ -60,8 +54,8 @@ func TestQueueSubmittedAlbumsAreNotAbandonedOnClose(t *testing.T) {
 	}
 
 	select {
-	case req := <-q.incoming:
-		t.Errorf("found an unprocessed request left in incoming after shutdown: %+v", req)
+	case req := <-q.albums:
+		t.Errorf("found an unprocessed request left in albums after shutdown: %+v", req)
 	default:
 	}
 }
@@ -134,20 +128,12 @@ func TestDispatchLogsExpandAlbumErrorAndContinues(t *testing.T) {
 		t.Fatalf("create good album: %v", err)
 	}
 
-	q := &Queue{
-		ctx:            context.Background(),
-		db:             db,
-		incoming:       make(chan any),
-		quit:           make(chan struct{}),
-		done:           make(chan struct{}),
-		scanningAlbums: make(map[int]struct{}),
-	}
-	q.max.Store(1)
+	q := newQueue(context.Background(), db, 1)
 
 	go q.dispatch()
 
-	q.incoming <- AlbumRequest{Album: badAlbum, Cache: scanner_cache.MakeAlbumCache()}
-	q.incoming <- AlbumRequest{Album: goodAlbum, Cache: scanner_cache.MakeAlbumCache()}
+	q.albums <- AlbumRequest{Album: badAlbum, Cache: scanner_cache.MakeAlbumCache()}
+	q.albums <- AlbumRequest{Album: goodAlbum, Cache: scanner_cache.MakeAlbumCache()}
 
 	close(q.quit)
 	<-q.done
@@ -161,15 +147,9 @@ func TestDispatchLogsExpandAlbumErrorAndContinues(t *testing.T) {
 	}
 }
 
-// TestCompleteMediaLastTaskDoesNotDeadlockDispatchTeardown reproduces a
-// deadlock: dispatch() tears down its worker pool (close(taskChan) then
-// wg.Wait()) the instant pendingTasks empties, which happens the moment the
-// last task is handed to a worker - not when that worker actually finishes
-// it. If CompleteMedia's isLast branch then tries to report the album done
-// back to dispatch() over q.incoming, nothing is reading q.incoming anymore
-// (dispatch() is parked in wg.Wait()), so the worker blocks forever trying
-// to send and dispatch() blocks forever waiting for it to exit - neither
-// side can proceed.
+// TestCompleteMediaLastTaskDoesNotDeadlockDispatch checks that a worker can
+// report an album's last task done right after that task left pendingTasks,
+// i.e. the moment dispatch() has nothing left to hand out.
 //
 // If this test ever fails by timing out, its own t.Cleanup below
 // (close(q.quit); <-q.done) will hang too, since a genuinely deadlocked
@@ -177,7 +157,7 @@ func TestDispatchLogsExpandAlbumErrorAndContinues(t *testing.T) {
 // unwind from outside. That's an inherent limit of testing a real deadlock
 // in-process: go test's own overall -timeout is what ultimately kills the
 // binary in that case, not this test.
-func TestCompleteMediaLastTaskDoesNotDeadlockDispatchTeardown(t *testing.T) {
+func TestCompleteMediaLastTaskDoesNotDeadlockDispatch(t *testing.T) {
 	db := test_utils.DatabaseTest(t)
 
 	album := &models.Album{Title: "deadlock repro", Path: t.TempDir()}
@@ -185,15 +165,7 @@ func TestCompleteMediaLastTaskDoesNotDeadlockDispatchTeardown(t *testing.T) {
 		t.Fatalf("create album: %v", err)
 	}
 
-	q := &Queue{
-		ctx:            context.Background(),
-		db:             db,
-		incoming:       make(chan any),
-		quit:           make(chan struct{}),
-		done:           make(chan struct{}),
-		scanningAlbums: make(map[int]struct{}),
-	}
-	q.max.Store(1)
+	q := newQueue(context.Background(), db, 1)
 
 	go q.dispatch()
 	t.Cleanup(func() {
@@ -212,11 +184,122 @@ func TestCompleteMediaLastTaskDoesNotDeadlockDispatchTeardown(t *testing.T) {
 	// reach the isLast branch.
 	tsk := newTask(album, cache, state, filepath.Join(album.Path, "does-not-exist.jpg"), taskDone)
 
-	q.incoming <- tsk
+	q.medias <- tsk
 
 	select {
 	case <-taskDone:
 	case <-time.After(5 * time.Second):
-		t.Fatal("processMedia never returned for the album's last task - dispatch() likely deadlocked tearing down its worker pool while the worker waited to report the album done")
+		t.Fatal("processMedia never returned for the album's last task - dispatch() likely deadlocked while the worker waited to report the album done")
+	}
+}
+
+// TestDispatchKeepsAcceptingWorkWhileExpanding checks that a slow album
+// expansion doesn't stop dispatch() from receiving new submissions.
+func TestDispatchKeepsAcceptingWorkWhileExpanding(t *testing.T) {
+	release := make(chan struct{})
+
+	q := newQueue(context.Background(), nil, 1)
+	q.expandFn = func(context.Context, *gorm.DB, AlbumRequest, func(int)) ([]*task, *albumState, error) {
+		<-release
+		return nil, nil, errors.New("expansion failed")
+	}
+
+	go q.dispatch()
+	t.Cleanup(func() {
+		close(release)
+		close(q.quit)
+		<-q.done
+	})
+
+	q.albums <- AlbumRequest{Album: &models.Album{Model: models.Model{ID: 1}}}
+
+	select {
+	case q.albums <- AlbumRequest{Album: &models.Album{Model: models.Model{ID: 2}}}:
+	case <-time.After(5 * time.Second):
+		t.Error("dispatch() stopped accepting submissions while an album was expanding")
+	}
+}
+
+// TestWorkerIdleTimeoutDoesNotStrandTasks checks that a task submitted after
+// the pool's only worker exited on its idle timeout still gets processed.
+func TestWorkerIdleTimeoutDoesNotStrandTasks(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	album := &models.Album{Title: "idle worker", Path: t.TempDir()}
+	if err := db.Create(album).Error; err != nil {
+		t.Fatalf("create album: %v", err)
+	}
+
+	q := newQueue(context.Background(), db, 1)
+	q.idleTimeout = time.Millisecond
+	go q.dispatch()
+	t.Cleanup(func() {
+		close(q.quit)
+		<-q.done
+	})
+
+	cache := scanner_cache.MakeAlbumCache()
+	for i := range 3 {
+		state := newAlbumState(db, album, cache, 1)
+		state.skipAfter = true
+
+		// The path doesn't need to exist: processMedia reports the task done
+		// however it ended.
+		done := make(chan struct{})
+		q.medias <- newTask(album, cache, state, filepath.Join(album.Path, "does-not-exist.jpg"), done)
+
+		select {
+		case <-done:
+		case <-time.After(30 * time.Second):
+			t.Fatalf("task %d was never processed", i)
+		}
+
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+// TestEnqueueAlbumDedupsUntilDone checks that an album is rejected from when
+// it's first accepted until its scan is reported done.
+func TestEnqueueAlbumDedupsUntilDone(t *testing.T) {
+	q := newQueue(context.Background(), nil, 1)
+	req := AlbumRequest{Album: &models.Album{Model: models.Model{ID: 1}}}
+
+	q.enqueueAlbum(req)
+	q.enqueueAlbum(req)
+	if len(q.pendingAlbums) != 1 {
+		t.Fatalf("pendingAlbums = %d, want 1 after submitting the same album twice", len(q.pendingAlbums))
+	}
+
+	// Still in-flight once dequeued for expansion.
+	q.pendingAlbums = nil
+	q.enqueueAlbum(req)
+	if len(q.pendingAlbums) != 0 {
+		t.Fatalf("pendingAlbums = %d, want 0 while the album is in-flight", len(q.pendingAlbums))
+	}
+
+	delete(q.inFlight, req.Album.ID)
+	q.enqueueAlbum(req)
+	if len(q.pendingAlbums) != 1 {
+		t.Fatalf("pendingAlbums = %d, want 1 after the album finished", len(q.pendingAlbums))
+	}
+}
+
+// TestUrgentTasksDispatchFirst checks that urgent tasks are handed out before
+// pending ones, whatever order they arrived in.
+func TestUrgentTasksDispatchFirst(t *testing.T) {
+	q := newQueue(context.Background(), nil, 1)
+
+	pending, urgent := &task{path: "pending"}, &task{path: "urgent"}
+	q.pendingTasks = []*task{pending}
+	q.urgentTasks = []*task{urgent}
+
+	for _, want := range []*task{urgent, pending, nil} {
+		got := q.nextTask()
+		if got != want {
+			t.Fatalf("nextTask() = %v, want %v", got, want)
+		}
+		if got != nil {
+			q.popTask()
+		}
 	}
 }

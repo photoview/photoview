@@ -10,8 +10,8 @@ package queue
 import (
 	"context"
 	"fmt"
-	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
@@ -19,60 +19,91 @@ import (
 	"gorm.io/gorm"
 )
 
+// defaultWorkerIdleTimeout is how long a worker waits for its next task
+// before exiting, releasing its exiftool process.
+const defaultWorkerIdleTimeout = 30 * time.Second
+
 // Queue is a single dispatcher goroutine that turns AlbumRequests into Tasks
-// and feeds them to a pool of workers. pendingAlbums, pendingTasks, taskChan,
-// activeWorkers and scanningAlbums are only ever touched by dispatch(), so
-// none of them need locking of their own. finishedAlbums is the one
-// exception - see its own doc comment.
+// and feeds them to a pool of workers. dispatch() is an event loop that never
+// blocks outside its one select: anything slow runs in its own goroutine and
+// reports back over a channel. That makes every send to dispatch() safe, and
+// means the scheduling state below is only ever touched by dispatch(), so
+// none of it needs locking.
 type Queue struct {
 	ctx context.Context
 
-	db  *gorm.DB
-	max atomic.Int64
+	db          *gorm.DB
+	max         atomic.Int64
+	idleTimeout time.Duration
+	expandFn    func(ctx context.Context, db *gorm.DB, req AlbumRequest, markDone func(albumID int)) ([]*task, *albumState, error)
 
-	incoming chan any // AlbumRequest or *task
-	quit     chan struct{}
-	done     chan struct{}
+	albums chan AlbumRequest
+	medias chan *task
+	quit   chan struct{}
+	done   chan struct{}
+
+	// Reports back to dispatch() from the goroutines it started.
+	expanded     chan expandResult
+	albumDone    chan int
+	workerExited chan struct{}
+
+	// taskChan hands tasks to workers. It's unbuffered, so a worker exiting
+	// on its idle timeout can never strand a task, and it's only closed once
+	// the queue is shutting down.
+	taskChan chan *task
 
 	pendingAlbums []AlbumRequest
-	pendingTasks  []*task
+	// urgentTasks are dispatched before pendingTasks: a caller is blocked on
+	// each of them (see SubmitMedia), while nothing waits on an album's tasks.
+	urgentTasks  []*task
+	pendingTasks []*task
 
-	// scanningAlbums holds the ID of every album that has been dequeued from
-	// pendingAlbums for expansion but hasn't yet finished (expandAlbum error,
-	// zero tasks, or its albumState's last task completing - see the
-	// dispatch() branches and markAlbumDone). Without this, enqueue()'s
-	// AlbumRequest dedup only sees pendingAlbums, which is empty for exactly
-	// this album the moment it's mid-scan - a resubmission arriving in that
-	// window would expand the same album a second time concurrently with the
-	// first, and whichever albumState's cleanupStaleMedia runs first would
-	// delete media the other, still-running scan already found and persisted.
-	scanningAlbums map[int]struct{}
+	// inFlight holds the ID of every album from when it's accepted into
+	// pendingAlbums until its scan has finished (see onExpanded and
+	// markAlbumDone). Without this, a resubmission of an album mid-scan would
+	// expand it a second time concurrently with the first, and whichever
+	// albumState's cleanupStaleMedia runs first would delete media the other,
+	// still-running scan already found and persisted.
+	inFlight map[int]struct{}
 
-	// finishedAlbums/finishedMu are how a worker goroutine reports an
-	// album's last task completing (see markAlbumDone) - a mutex-guarded
-	// append rather than a send on incoming, because dispatch() can
-	// legitimately be parked in wg.Wait() below (tearing down idle workers)
-	// at exactly the moment a worker needs to report in, and a channel send
-	// would deadlock the two goroutines waiting on each other. enqueue()
-	// drains this into scanningAlbums before every dedup check.
-	finishedMu     sync.Mutex
-	finishedAlbums []int
-
-	// taskChan is created lazily and closed (then recreated on next use)
-	// every time the pool goes idle - that close is what tells its workers
-	// to exit their `range` loop and return.
-	taskChan      chan *task
+	expanding     bool
 	activeWorkers int
-	wg            sync.WaitGroup // whole-Queue lifetime; Add/Wait only ever called from dispatch()
+}
+
+// expandResult is how an expansion goroutine reports back to dispatch().
+// tasks is empty if the album had nothing to do or failed to expand; either
+// way expand() has already finished with the album.
+type expandResult struct {
+	albumID int
+	tasks   []*task
+}
+
+func newQueue(ctx context.Context, db *gorm.DB, workers int) *Queue {
+	q := &Queue{
+		ctx:          context.WithoutCancel(ctx),
+		db:           db,
+		idleTimeout:  defaultWorkerIdleTimeout,
+		expandFn:     expandAlbum,
+		albums:       make(chan AlbumRequest),
+		medias:       make(chan *task),
+		quit:         make(chan struct{}),
+		done:         make(chan struct{}),
+		expanded:     make(chan expandResult),
+		albumDone:    make(chan int),
+		workerExited: make(chan struct{}),
+		taskChan:     make(chan *task),
+		inFlight:     make(map[int]struct{}),
+	}
+	q.max.Store(int64(workers))
+
+	return q
 }
 
 // markAlbumDone records that albumID's last task has finished (including its
-// stale-media cleanup) - called from a worker goroutine via CompleteMedia,
-// so it must never block on dispatch() being in any particular state.
+// stale-media cleanup) - called from a worker goroutine via CompleteMedia.
+// dispatch() outlives every worker, so this send always gets received.
 func (q *Queue) markAlbumDone(albumID int) {
-	q.finishedMu.Lock()
-	q.finishedAlbums = append(q.finishedAlbums, albumID)
-	q.finishedMu.Unlock()
+	q.albumDone <- albumID
 }
 
 var globalQueue *Queue
@@ -87,15 +118,7 @@ func Initialize(ctx context.Context, db *gorm.DB) error {
 		return fmt.Errorf("get site info: %w", err)
 	}
 
-	q := &Queue{
-		ctx:            context.WithoutCancel(ctx),
-		db:             db,
-		incoming:       make(chan any),
-		quit:           make(chan struct{}),
-		done:           make(chan struct{}),
-		scanningAlbums: make(map[int]struct{}),
-	}
-	q.max.Store(int64(siteInfo.ConcurrentWorkers))
+	q := newQueue(ctx, db, siteInfo.ConcurrentWorkers)
 
 	globalQueue = q
 	go q.dispatch()
@@ -142,7 +165,7 @@ func SubmitAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache) er
 	}
 
 	select {
-	case globalQueue.incoming <- AlbumRequest{Album: album, Cache: cache}:
+	case globalQueue.albums <- AlbumRequest{Album: album, Cache: cache}:
 	case <-globalQueue.quit:
 		return fmt.Errorf("scanner queue is shutting down")
 	}
@@ -151,10 +174,10 @@ func SubmitAlbum(album *models.Album, cache *scanner_cache.AlbumScannerCache) er
 }
 
 // SubmitMedia (re)processes a single already-known media, submitting it to
-// the same queue and worker pool as everything else - used to fix up one
-// file (e.g. regenerate a cache file found missing while serving it) without
-// starting a dedicated worker for it. It blocks until processing has
-// finished.
+// the same worker pool as everything else, but ahead of any queued album
+// tasks - used to fix up one file (e.g. regenerate a cache file found missing
+// while serving it) without starting a dedicated worker for it. It blocks
+// until processing has finished.
 func SubmitMedia(ctx context.Context, db *gorm.DB, album *models.Album, cache *scanner_cache.AlbumScannerCache, mediaPath string) error {
 	if globalQueue == nil {
 		return fmt.Errorf("scanner queue not initialized")
@@ -166,7 +189,7 @@ func SubmitMedia(ctx context.Context, db *gorm.DB, album *models.Album, cache *s
 	t := newTask(album, cache, state, mediaPath, make(chan struct{}))
 
 	select {
-	case globalQueue.incoming <- t:
+	case globalQueue.medias <- t:
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-globalQueue.quit:
@@ -185,100 +208,163 @@ func SubmitMedia(ctx context.Context, db *gorm.DB, album *models.Album, cache *s
 func (q *Queue) dispatch() {
 	defer close(q.done)
 
-	for {
-		// Pending tasks take priority over expanding more albums.
-		if len(q.pendingTasks) == 0 && len(q.pendingAlbums) > 0 {
-			req := q.pendingAlbums[0]
-			q.pendingAlbums = q.pendingAlbums[1:]
-			q.scanningAlbums[req.Album.ID] = struct{}{}
+	albums, medias, quit := q.albums, q.medias, q.quit
+	closing, workersStopped := false, false
 
-			tasks, state, err := expandAlbum(q.ctx, q.db, req, q.markAlbumDone)
-			switch {
-			case err != nil:
-				scanner_utils.ScannerError(q.ctx, "expand album (%s): %s", req.Album.Path, err)
-				// Nothing will ever complete this album's (nonexistent)
-				// tasks, so nothing will report it done - without this, the
-				// album could never be resubmitted.
-				delete(q.scanningAlbums, req.Album.ID)
-			case len(tasks) == 0:
-				// Nothing to do. This runs synchronously, in dispatch()
-				// itself, so scanningAlbums can be cleared directly.
-				state.completeAlbum(q.ctx)
-				delete(q.scanningAlbums, req.Album.ID)
-			default:
-				q.pendingTasks = append(q.pendingTasks, tasks...)
-			}
-			continue
+	for {
+		q.startExpansion()
+
+		next := q.nextTask()
+		if next != nil {
+			q.ensureWorker()
 		}
 
-		if len(q.pendingTasks) == 0 {
-			if q.taskChan != nil {
-				// No work left, close all workers
+		if closing && next == nil && len(q.pendingAlbums) == 0 && !q.expanding {
+			if !workersStopped {
 				close(q.taskChan)
-				q.taskChan, q.activeWorkers = nil, 0
-				q.wg.Wait()
+				workersStopped = true
 			}
-
-			// Both pendingAlbums and pendingTasks are empty.
-			select {
-			case req := <-q.incoming:
-				q.enqueue(req)
-			case <-q.quit:
+			if q.activeWorkers == 0 {
 				return
 			}
-			continue
 		}
 
-		// Ensure workers are running
-		if q.taskChan == nil {
-			q.taskChan = make(chan *task)
-		}
-		if q.activeWorkers < int(q.max.Load()) {
-			q.activeWorkers++
-			q.wg.Add(1)
-			go func(ch <-chan *task) {
-				defer q.wg.Done()
-				w := newWorker(q.ctx, q.db)
-				defer w.close()
-				for t := range ch {
-					w.processMedia(t)
-				}
-			}(q.taskChan)
+		// A nil channel is never ready, so with no task to send this case
+		// just never fires.
+		var out chan<- *task
+		if next != nil {
+			out = q.taskChan
 		}
 
 		select {
-		case q.taskChan <- q.pendingTasks[0]:
-			q.pendingTasks = q.pendingTasks[1:]
-		case req := <-q.incoming:
-			q.enqueue(req)
+		case out <- next:
+			q.popTask()
+		case req := <-albums:
+			q.enqueueAlbum(req)
+		case t := <-medias:
+			q.urgentTasks = append(q.urgentTasks, t)
+		case res := <-q.expanded:
+			q.onExpanded(res)
+		case id := <-q.albumDone:
+			delete(q.inFlight, id)
+		case <-q.workerExited:
+			q.activeWorkers--
+		case <-quit:
+			// Submitters select on quit too, so none of them get stuck once
+			// these stop being received from. This is also what guarantees
+			// nothing new can need a worker after taskChan is closed.
+			closing = true
+			albums, medias, quit = nil, nil, nil
 		}
 	}
 }
 
-func (q *Queue) enqueue(req any) {
-	// Drain any albums a worker has reported done since we last checked,
-	// before the AlbumRequest dedup below reads scanningAlbums - otherwise a
-	// resubmission could be rejected as "still scanning" long after that
-	// scan actually finished, with no retry to recover it.
-	q.finishedMu.Lock()
-	for _, id := range q.finishedAlbums {
-		delete(q.scanningAlbums, id)
+// startExpansion starts expanding the next pending album, if nothing is
+// expanding already. Pending tasks take priority over expanding more albums.
+func (q *Queue) startExpansion() {
+	if q.expanding || len(q.pendingTasks) > 0 || len(q.pendingAlbums) == 0 {
+		return
 	}
-	q.finishedAlbums = q.finishedAlbums[:0]
-	q.finishedMu.Unlock()
 
-	switch r := req.(type) {
-	case AlbumRequest:
-		if _, scanning := q.scanningAlbums[r.Album.ID]; scanning {
-			return
-		}
-		for _, pending := range q.pendingAlbums {
-			if pending.Album.ID == r.Album.ID {
+	req := q.pendingAlbums[0]
+	q.pendingAlbums = q.pendingAlbums[1:]
+	q.expanding = true
+
+	go q.expand(req)
+}
+
+// expand runs in its own goroutine since it can be slow: listing the album
+// and identifying each file's media type, and for an album with nothing to
+// do, its stale-media cleanup too.
+func (q *Queue) expand(req AlbumRequest) {
+	tasks, state, err := q.expandFn(q.ctx, q.db, req, q.markAlbumDone)
+	switch {
+	case err != nil:
+		scanner_utils.ScannerError(q.ctx, "expand album (%s): %s", req.Album.Path, err)
+	case len(tasks) == 0:
+		state.completeAlbum(q.ctx)
+	}
+
+	q.expanded <- expandResult{albumID: req.Album.ID, tasks: tasks}
+}
+
+func (q *Queue) onExpanded(res expandResult) {
+	q.expanding = false
+
+	if len(res.tasks) == 0 {
+		// Nothing will ever complete this album's (nonexistent) tasks, so
+		// nothing else will report it done - without this, the album could
+		// never be resubmitted.
+		delete(q.inFlight, res.albumID)
+		return
+	}
+
+	q.pendingTasks = append(q.pendingTasks, res.tasks...)
+}
+
+func (q *Queue) enqueueAlbum(req AlbumRequest) {
+	if _, ok := q.inFlight[req.Album.ID]; ok {
+		return
+	}
+
+	q.inFlight[req.Album.ID] = struct{}{}
+	q.pendingAlbums = append(q.pendingAlbums, req)
+}
+
+// nextTask returns the task to dispatch next, or nil if there is none.
+func (q *Queue) nextTask() *task {
+	if len(q.urgentTasks) > 0 {
+		return q.urgentTasks[0]
+	}
+	if len(q.pendingTasks) > 0 {
+		return q.pendingTasks[0]
+	}
+	return nil
+}
+
+// popTask removes the task nextTask returned.
+func (q *Queue) popTask() {
+	if len(q.urgentTasks) > 0 {
+		q.urgentTasks = q.urgentTasks[1:]
+		return
+	}
+	q.pendingTasks = q.pendingTasks[1:]
+}
+
+// ensureWorker grows the pool by one worker, up to max. Calling this once per
+// dispatch() iteration is enough: a task only ever waits on a pool that's
+// either already full or has just gained a worker to take it.
+func (q *Queue) ensureWorker() {
+	if q.activeWorkers >= int(q.max.Load()) {
+		return
+	}
+
+	q.activeWorkers++
+	go q.runWorker()
+}
+
+// runWorker processes tasks until taskChan is closed or no task shows up for
+// idleTimeout. Either way, its exit is reported to dispatch() only after the
+// worker itself has shut down, so that Close() really does wait for it.
+func (q *Queue) runWorker() {
+	defer func() { q.workerExited <- struct{}{} }()
+
+	w := newWorker(q.ctx, q.db)
+	defer w.close()
+
+	idle := time.NewTimer(q.idleTimeout)
+	defer idle.Stop()
+
+	for {
+		select {
+		case t, ok := <-q.taskChan:
+			if !ok {
 				return
 			}
+			w.processMedia(t)
+			idle.Reset(q.idleTimeout)
+		case <-idle.C:
+			return
 		}
-		q.pendingAlbums = append(q.pendingAlbums, r)
-	case *task:
-		q.pendingTasks = append(q.pendingTasks, r)
 	}
 }
