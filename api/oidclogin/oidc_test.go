@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	_ "github.com/photoview/photoview/api/test_utils/flags"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 	"gorm.io/driver/sqlite"
