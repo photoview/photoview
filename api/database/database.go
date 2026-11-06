@@ -154,6 +154,7 @@ func SetupDatabase() (*gorm.DB, error) {
 var database_models []interface{} = []interface{}{
 	&models.User{},
 	&models.AccessToken{},
+	&models.OIDCLoginState{},
 	&models.SiteInfo{},
 	&models.Media{},
 	&models.MediaURL{},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/auth"
 	graphql_endpoint "github.com/photoview/photoview/api/graphql/endpoint"
+	"github.com/photoview/photoview/api/oidclogin"
 	"github.com/photoview/photoview/api/routes"
 	"github.com/photoview/photoview/api/scanner/externaltools/exif"
 	"github.com/photoview/photoview/api/scanner/face_detection"
@@ -80,6 +82,37 @@ func main() {
 	apiListenURL := utils.ApiListenUrl()
 
 	endpointRouter := rootRouter.PathPrefix(apiListenURL.Path).Subrouter()
+
+	oidcConfig, err := oidclogin.ConfigFromEnvironment()
+	if err != nil {
+		log.Panicf("Invalid OIDC configuration: %s", err)
+	}
+	var oidcHandler *oidclogin.Handler
+	if oidcConfig != nil {
+		callbackPath := path.Join(apiListenURL.Path, "auth/oidc/callback")
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		oidcHandler, err = oidclogin.New(ctx, db, oidcConfig, callbackPath)
+		cancel()
+		if err != nil {
+			if errors.Is(err, oidclogin.ErrDiscovery) {
+				log.Printf("OIDC unavailable at startup; local password login remains available: %v", err)
+			} else {
+				log.Panicf("Invalid OIDC configuration: %s", err)
+			}
+		}
+	}
+	if oidcHandler != nil {
+		oidcRouter := http.NewServeMux()
+		oidcHandler.Register(oidcRouter)
+		endpointRouter.PathPrefix("/auth/oidc/").Handler(http.StripPrefix(path.Join(apiListenURL.Path, "auth/oidc"), oidcRouter))
+	} else {
+		// The login page uses this endpoint to hide its SSO button.
+		endpointRouter.HandleFunc("/auth/oidc/status", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{"enabled":false}`))
+		}).Methods(http.MethodGet)
+	}
 
 	if devMode {
 		endpointRouter.Handle("/", playground.Handler("GraphQL playground", path.Join(apiListenURL.Path, "graphql")))

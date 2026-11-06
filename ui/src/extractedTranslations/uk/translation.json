@@ -60,6 +60,10 @@
       },
       "title": "Початкове налаштування"
     },
+    "oidc_failed": "",
+    "oidc_invalid_state": "",
+    "oidc_not_linked": "",
+    "oidc_sign_in": "",
     "welcome": "Ласкаво просимо до Photoview"
   },
   "meta": {

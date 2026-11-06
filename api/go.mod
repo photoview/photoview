@@ -7,6 +7,7 @@ require (
 	github.com/Kagami/go-face v0.0.0-20210630145111-0c14797b4d0e
 	github.com/buckket/go-blurhash v1.1.0
 	github.com/coder/websocket v1.8.15
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/handlers v1.5.2
@@ -19,6 +20,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.64
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	golang.org/x/crypto v0.58.0
+	golang.org/x/oauth2 v0.37.0
 	golang.org/x/text v0.43.0
 	gopkg.in/gographics/imagick.v3 v3.7.3
 	gopkg.in/vansante/go-ffprobe.v2 v2.3.1
@@ -32,6 +34,7 @@ require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/agnivade/levenshtein v1.2.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
