@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -40,6 +41,24 @@ func TestProviderEndpointsRequireHTTPS(t *testing.T) {
 			require.ErrorIs(t, err, ErrDiscovery)
 		})
 	}
+}
+
+// TestDiscoveryRejectsHTTPRedirect keeps provider metadata on HTTPS even when
+// the initial discovery URL is secure.
+func TestDiscoveryRejectsHTTPRedirect(t *testing.T) {
+	var insecureHits atomic.Int32
+	insecure := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		insecureHits.Add(1)
+	}))
+	defer insecure.Close()
+	provider := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, insecure.URL, http.StatusTemporaryRedirect)
+	}))
+	defer provider.Close()
+	config := &Config{Issuer: provider.URL, ClientID: "photoview", RedirectURL: "https://photos.example.test/api/auth/oidc/callback", SuccessURL: "https://photos.example.test/"}
+	_, err := New(oidc.ClientContext(context.Background(), provider.Client()), nil, config, "/api/auth/oidc/callback")
+	require.ErrorIs(t, err, ErrDiscovery)
+	require.Zero(t, insecureHits.Load())
 }
 
 // TestMissingStateStorageKeepsLocalLoginAvailable checks the startup fallback.

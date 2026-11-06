@@ -55,6 +55,7 @@ type Config struct {
 
 type Handler struct {
 	db          *gorm.DB
+	client      *http.Client
 	oauth       *oauth2.Config
 	verifier    *oidc.IDTokenVerifier
 	redirectURL *url.URL
@@ -120,7 +121,8 @@ func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) 
 	if err != nil || successURL.Scheme != "https" || successURL.Host != redirectURL.Host || successURL.User != nil || successURL.RawQuery != "" || successURL.Fragment != "" || (successURL.Path != "" && !strings.HasSuffix(successURL.Path, "/")) {
 		return nil, errors.New("OIDC success URL must be an HTTPS UI base URL ending in / on the same host as the callback")
 	}
-	provider, err := oidc.NewProvider(ctx, config.Issuer)
+	client := secureOIDCClient(ctx)
+	provider, err := oidc.NewProvider(oidc.ClientContext(ctx, client), config.Issuer)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrDiscovery, err)
 	}
@@ -142,12 +144,37 @@ func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) 
 	}
 	return &Handler{
 		db:          db,
+		client:      client,
 		oauth:       &oauth2.Config{ClientID: config.ClientID, ClientSecret: config.ClientSecret, RedirectURL: config.RedirectURL, Endpoint: endpoint, Scopes: []string{oidc.ScopeOpenID}},
 		verifier:    provider.Verifier(&oidc.Config{ClientID: config.ClientID}),
 		redirectURL: redirectURL,
 		successURL:  successURL,
 		subjects:    config.SubjectMap,
 	}, nil
+}
+
+// secureOIDCClient keeps the caller's TLS settings while refusing redirects to
+// HTTP during provider discovery, JWKS retrieval, and code exchange.
+func secureOIDCClient(ctx context.Context) *http.Client {
+	base, ok := ctx.Value(oauth2.HTTPClient).(*http.Client)
+	if !ok || base == nil {
+		base = http.DefaultClient
+	}
+	client := *base
+	previous := client.CheckRedirect
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if req.URL.Scheme != "https" {
+			return errors.New("OIDC HTTP redirect refused")
+		}
+		if previous != nil {
+			return previous(req, via)
+		}
+		if len(via) >= 10 {
+			return errors.New("OIDC stopped after 10 redirects")
+		}
+		return nil
+	}
+	return &client
 }
 
 // secureEndpoint accepts an HTTPS provider endpoint without embedded credentials.
@@ -326,6 +353,7 @@ func (h *Handler) callback(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
+	ctx = oidc.ClientContext(ctx, h.client)
 	token, err := h.oauth.Exchange(ctx, code, oauth2.VerifierOption(record.CodeVerifier))
 	if err != nil {
 		log.Printf("OIDC authorization code exchange failed: %v", err)

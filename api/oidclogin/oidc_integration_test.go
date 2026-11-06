@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -25,18 +26,28 @@ import (
 // TestSignedOIDCCallbackIssuesExistingUserSession verifies that a signed ID
 // token maps to an existing user and creates a Photoview session.
 func TestSignedOIDCCallbackIssuesExistingUserSession(t *testing.T) {
-	runSignedOIDCCallback(t, "keycloak-max-id", false)
+	runSignedOIDCCallback(t, "keycloak-max-id", false, "")
 }
 
 // TestSignedOIDCCallbackRejectsInvalidIdentity checks that an unmapped subject
 // or a mismatched nonce cannot create a Photoview session.
 func TestSignedOIDCCallbackRejectsInvalidIdentity(t *testing.T) {
-	t.Run("unmapped subject", func(t *testing.T) { runSignedOIDCCallback(t, "unknown-id", false) })
-	t.Run("wrong nonce", func(t *testing.T) { runSignedOIDCCallback(t, "keycloak-max-id", true) })
+	t.Run("unmapped subject", func(t *testing.T) { runSignedOIDCCallback(t, "unknown-id", false, "") })
+	t.Run("wrong nonce", func(t *testing.T) { runSignedOIDCCallback(t, "keycloak-max-id", true, "") })
+}
+
+// TestOIDCCallbackRejectsHTTPRedirect prevents code or JWKS requests from
+// following an HTTPS provider's redirect to a plaintext endpoint.
+func TestOIDCCallbackRejectsHTTPRedirect(t *testing.T) {
+	for _, endpoint := range []string{"token", "keys"} {
+		t.Run(endpoint, func(t *testing.T) {
+			runSignedOIDCCallback(t, "keycloak-max-id", false, endpoint)
+		})
+	}
 }
 
 // runSignedOIDCCallback exercises the full authorization callback with a test provider.
-func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool) {
+func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool, redirectEndpoint string) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(&models.User{}, &models.AccessToken{}, &models.OIDCLoginState{}, &models.OIDCLoginGate{}))
@@ -51,17 +62,31 @@ func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool) {
 	var provider *httptest.Server
 	var nonce string
 	var challenge string
+	var insecureHits atomic.Int32
+	insecure := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		insecureHits.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer insecure.Close()
 	provider = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/.well-known/openid-configuration":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{"issuer": provider.URL, "authorization_endpoint": provider.URL + "/authorize", "token_endpoint": provider.URL + "/token", "jwks_uri": provider.URL + "/keys"})
 		case "/keys":
+			if redirectEndpoint == "keys" {
+				http.Redirect(w, r, insecure.URL, http.StatusTemporaryRedirect)
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(jwks)
 		case "/token":
 			require.NoError(t, r.ParseForm())
 			require.Equal(t, challenge, oauth2.S256ChallengeFromVerifier(r.Form.Get("code_verifier")))
+			if redirectEndpoint == "token" {
+				http.Redirect(w, r, insecure.URL, http.StatusTemporaryRedirect)
+				return
+			}
 			claimedNonce := nonce
 			if wrongNonce {
 				claimedNonce = "wrong-nonce"
@@ -98,9 +123,10 @@ func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool) {
 	result := httptest.NewRecorder()
 	mux.ServeHTTP(result, callback)
 	require.Equal(t, http.StatusSeeOther, result.Code)
-	if wrongNonce || subject != "keycloak-max-id" {
+	if wrongNonce || subject != "keycloak-max-id" || redirectEndpoint != "" {
 		require.Contains(t, result.Header().Get("Location"), "oidc_error=")
 		require.Zero(t, countSessions(t, db))
+		require.Zero(t, insecureHits.Load())
 		return
 	}
 	require.Equal(t, cfg.SuccessURL, result.Header().Get("Location"))
