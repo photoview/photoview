@@ -16,6 +16,7 @@ import (
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -58,7 +59,25 @@ func TestDiscoveryRejectsHTTPRedirect(t *testing.T) {
 	config := &Config{Issuer: provider.URL, ClientID: "photoview", RedirectURL: "https://photos.example.test/api/auth/oidc/callback", SuccessURL: "https://photos.example.test/"}
 	_, err := New(oidc.ClientContext(context.Background(), provider.Client()), nil, config, "/api/auth/oidc/callback")
 	require.ErrorIs(t, err, ErrDiscovery)
+	require.ErrorContains(t, err, "OIDC HTTP redirect refused")
 	require.Zero(t, insecureHits.Load())
+}
+
+// TestSecureOIDCClientTimeout bounds default network calls without changing a
+// caller-supplied client's timeout or mutating the shared default client.
+func TestSecureOIDCClientTimeout(t *testing.T) {
+	defaultTimeout := http.DefaultClient.Timeout
+	require.Equal(t, 15*time.Second, secureOIDCClient(context.Background()).Timeout)
+	require.Equal(t, defaultTimeout, http.DefaultClient.Timeout)
+
+	custom := &http.Client{}
+	client := secureOIDCClient(oidc.ClientContext(context.Background(), custom))
+	require.Zero(t, client.Timeout)
+	require.Zero(t, custom.Timeout)
+
+	custom.Timeout = 30 * time.Second
+	client = secureOIDCClient(context.WithValue(context.Background(), oauth2.HTTPClient, custom))
+	require.Equal(t, custom.Timeout, client.Timeout)
 }
 
 // TestMissingStateStorageKeepsLocalLoginAvailable checks the startup fallback.

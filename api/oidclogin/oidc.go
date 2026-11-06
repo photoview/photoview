@@ -153,14 +153,18 @@ func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) 
 	}, nil
 }
 
-// secureOIDCClient keeps the caller's TLS settings while refusing redirects to
-// HTTP during provider discovery, JWKS retrieval, and code exchange.
+// secureOIDCClient keeps caller settings, bounds default requests, and refuses
+// HTTP redirects during discovery, JWKS retrieval, and code exchange.
 func secureOIDCClient(ctx context.Context) *http.Client {
 	base, ok := ctx.Value(oauth2.HTTPClient).(*http.Client)
-	if !ok || base == nil {
+	defaultClient := !ok || base == nil
+	if defaultClient {
 		base = http.DefaultClient
 	}
 	client := *base
+	if defaultClient && client.Timeout == 0 {
+		client.Timeout = 15 * time.Second
+	}
 	previous := client.CheckRedirect
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if req.URL.Scheme != "https" {

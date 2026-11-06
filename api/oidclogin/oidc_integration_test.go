@@ -63,6 +63,7 @@ func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool, redire
 	var nonce string
 	var challenge string
 	var insecureHits atomic.Int32
+	var redirectHits atomic.Int32
 	insecure := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		insecureHits.Add(1)
 		w.WriteHeader(http.StatusOK)
@@ -75,6 +76,7 @@ func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool, redire
 			json.NewEncoder(w).Encode(map[string]interface{}{"issuer": provider.URL, "authorization_endpoint": provider.URL + "/authorize", "token_endpoint": provider.URL + "/token", "jwks_uri": provider.URL + "/keys"})
 		case "/keys":
 			if redirectEndpoint == "keys" {
+				redirectHits.Add(1)
 				http.Redirect(w, r, insecure.URL, http.StatusTemporaryRedirect)
 				return
 			}
@@ -84,6 +86,7 @@ func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool, redire
 			require.NoError(t, r.ParseForm())
 			require.Equal(t, challenge, oauth2.S256ChallengeFromVerifier(r.Form.Get("code_verifier")))
 			if redirectEndpoint == "token" {
+				redirectHits.Add(1)
 				http.Redirect(w, r, insecure.URL, http.StatusTemporaryRedirect)
 				return
 			}
@@ -125,6 +128,10 @@ func runSignedOIDCCallback(t *testing.T, subject string, wrongNonce bool, redire
 	require.Equal(t, http.StatusSeeOther, result.Code)
 	if wrongNonce || subject != "keycloak-max-id" || redirectEndpoint != "" {
 		require.Contains(t, result.Header().Get("Location"), "oidc_error=")
+		if redirectEndpoint != "" {
+			require.Positive(t, redirectHits.Load())
+			require.Contains(t, result.Header().Get("Location"), "oidc_error=authorization_failed")
+		}
 		require.Zero(t, countSessions(t, db))
 		require.Zero(t, insecureHits.Load())
 		return
