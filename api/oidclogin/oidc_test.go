@@ -16,6 +16,9 @@ import (
 
 // TestConfigFromEnvironment covers disabled, incomplete, and valid OIDC settings.
 func TestConfigFromEnvironment(t *testing.T) {
+	for _, name := range []string{"PHOTOVIEW_OIDC_ISSUER", "PHOTOVIEW_OIDC_CLIENT_ID", "PHOTOVIEW_OIDC_CLIENT_SECRET", "PHOTOVIEW_OIDC_REDIRECT_URL", "PHOTOVIEW_OIDC_SUCCESS_URL", "PHOTOVIEW_OIDC_SUBJECT_MAP"} {
+		t.Setenv(name, "")
+	}
 	config, err := ConfigFromEnvironment()
 	require.NoError(t, err)
 	require.Nil(t, config)
@@ -36,7 +39,8 @@ func TestConfigFromEnvironment(t *testing.T) {
 func TestStateIsBrowserBoundAndSingleUse(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.OIDCLoginState{}))
+	require.NoError(t, db.AutoMigrate(&models.OIDCLoginState{}, &models.OIDCLoginGate{}))
+	require.NoError(t, db.Create(&models.OIDCLoginGate{ID: 1}).Error)
 	callbackURL, _ := url.Parse("https://photos.example.test/api/auth/oidc/callback")
 	successURL, _ := url.Parse("https://photos.example.test/")
 	handler := &Handler{db: db, redirectURL: callbackURL, successURL: successURL, oauth: &oauth2.Config{ClientID: "photoview", RedirectURL: callbackURL.String(), Endpoint: oauth2.Endpoint{AuthURL: "https://id.example.test/authorize"}}}

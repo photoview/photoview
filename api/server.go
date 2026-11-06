@@ -96,7 +96,7 @@ func main() {
 		oidcHandler, err = oidclogin.New(ctx, db, oidcConfig, callbackPath)
 		cancel()
 		if err != nil {
-			if errors.Is(err, oidclogin.ErrDiscovery) {
+			if errors.Is(err, oidclogin.ErrDiscovery) || errors.Is(err, oidclogin.ErrStateStorage) {
 				log.Printf("OIDC unavailable at startup; local password login remains available: %v", err)
 			} else {
 				log.Panicf("Invalid OIDC configuration: %s", err)

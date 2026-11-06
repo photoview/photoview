@@ -35,7 +35,8 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// The OIDC callback must remain reachable when an old local session
 			// cookie has expired. These endpoints do not use the current user.
-			if strings.HasPrefix(r.URL.Path, strings.TrimRight(utils.ApiListenUrl().Path, "/")+"/auth/oidc/") {
+			oidcPath := strings.TrimRight(utils.ApiListenUrl().Path, "/") + "/auth/oidc/"
+			if r.URL.Path == oidcPath+"start" || r.URL.Path == oidcPath+"callback" || r.URL.Path == oidcPath+"status" {
 				next.ServeHTTP(w, r)
 				return
 			}

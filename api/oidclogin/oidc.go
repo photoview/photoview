@@ -17,21 +17,31 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
 const stateCookie = "photoview-oidc-state"
 const stateLifetime = 5 * time.Minute
+const localStartsPerSecond = 20
+const globalStartsPerMinute = 300
+const maxOutstandingStates = 1600
+
+var errLoginLimit = errors.New("OIDC login start limit reached")
 
 // ErrDiscovery identifies a temporary provider failure; local login should
 // remain available even when the identity provider is offline at startup.
 var ErrDiscovery = errors.New("OIDC provider discovery unavailable")
+
+// ErrStateStorage identifies unavailable OIDC state storage at startup.
+var ErrStateStorage = errors.New("OIDC state storage unavailable")
 
 type Config struct {
 	Issuer       string
@@ -50,6 +60,10 @@ type Handler struct {
 	redirectURL *url.URL
 	successURL  *url.URL
 	subjects    map[string]string
+	limitMu     sync.Mutex
+	limitSince  time.Time
+	limitStarts int
+	storeMu     sync.Mutex
 }
 
 // ConfigFromEnvironment returns nil when OIDC is not configured. A partially
@@ -87,7 +101,8 @@ func ConfigFromEnvironment() (*Config, error) {
 	return &Config{issuer, clientID, clientSecret, redirect, success, subjects}, nil
 }
 
-// New validates the OIDC URLs and discovers the provider before enabling SSO.
+// New validates the OIDC URLs, discovers the provider, and prepares shared
+// state admission before enabling SSO.
 // A nil config leaves local password login as the only sign-in method.
 func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) (*Handler, error) {
 	if config == nil {
@@ -102,21 +117,43 @@ func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) 
 		return nil, fmt.Errorf("OIDC redirect URL must be HTTPS and end at %s", callbackPath)
 	}
 	successURL, err := url.Parse(config.SuccessURL)
-	if err != nil || successURL.Scheme != "https" || successURL.Host != redirectURL.Host || successURL.User != nil || successURL.RawQuery != "" || successURL.Fragment != "" {
-		return nil, errors.New("OIDC success URL must be an HTTPS URL on the same host as the callback")
+	if err != nil || successURL.Scheme != "https" || successURL.Host != redirectURL.Host || successURL.User != nil || successURL.RawQuery != "" || successURL.Fragment != "" || (successURL.Path != "" && !strings.HasSuffix(successURL.Path, "/")) {
+		return nil, errors.New("OIDC success URL must be an HTTPS UI base URL ending in / on the same host as the callback")
 	}
 	provider, err := oidc.NewProvider(ctx, config.Issuer)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrDiscovery, err)
 	}
+	var metadata struct {
+		JWKSURI string `json:"jwks_uri"`
+	}
+	if err := provider.Claims(&metadata); err != nil {
+		return nil, fmt.Errorf("%w: invalid provider metadata: %v", ErrDiscovery, err)
+	}
+	endpoint := provider.Endpoint()
+	if !secureEndpoint(endpoint.AuthURL) || !secureEndpoint(endpoint.TokenURL) || !secureEndpoint(metadata.JWKSURI) {
+		return nil, fmt.Errorf("%w: provider authorization, token, and JWKS endpoints must be valid HTTPS URLs", ErrDiscovery)
+	}
+	if !db.Migrator().HasTable(&models.OIDCLoginState{}) || !db.Migrator().HasTable(&models.OIDCLoginGate{}) {
+		return nil, ErrStateStorage
+	}
+	if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.OIDCLoginGate{ID: 1, WindowStart: time.Now()}).Error; err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrStateStorage, err)
+	}
 	return &Handler{
 		db:          db,
-		oauth:       &oauth2.Config{ClientID: config.ClientID, ClientSecret: config.ClientSecret, RedirectURL: config.RedirectURL, Endpoint: provider.Endpoint(), Scopes: []string{oidc.ScopeOpenID}},
+		oauth:       &oauth2.Config{ClientID: config.ClientID, ClientSecret: config.ClientSecret, RedirectURL: config.RedirectURL, Endpoint: endpoint, Scopes: []string{oidc.ScopeOpenID}},
 		verifier:    provider.Verifier(&oidc.Config{ClientID: config.ClientID}),
 		redirectURL: redirectURL,
 		successURL:  successURL,
 		subjects:    config.SubjectMap,
 	}, nil
+}
+
+// secureEndpoint accepts an HTTPS provider endpoint without embedded credentials.
+func secureEndpoint(raw string) bool {
+	u, err := url.Parse(raw)
+	return err == nil && u.Scheme == "https" && u.Host != "" && u.User == nil && u.Fragment == "" && u.Opaque == ""
 }
 
 // randomString returns 32 cryptographically random bytes as a URL-safe value.
@@ -157,6 +194,10 @@ func (h *Handler) status(w http.ResponseWriter, r *http.Request) {
 // the browser before redirecting to the provider with PKCE and a nonce.
 func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
+	if !h.admitLocal() {
+		http.Error(w, "OIDC login requests are temporarily limited", http.StatusTooManyRequests)
+		return
+	}
 	state, err := randomString()
 	if err != nil {
 		log.Printf("OIDC login start: random state unavailable: %v", err)
@@ -170,10 +211,12 @@ func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	verifier := oauth2.GenerateVerifier()
-	// Expired requests are removed opportunistically; the callback also checks expiry.
-	h.db.Where("expires_at < ?", time.Now()).Delete(&models.OIDCLoginState{})
 	record := models.OIDCLoginState{StateHash: hash(state), CodeVerifier: verifier, Nonce: nonce, ExpiresAt: time.Now().Add(stateLifetime)}
-	if err := h.db.Create(&record).Error; err != nil {
+	if err := h.storeState(&record); err != nil {
+		if errors.Is(err, errLoginLimit) {
+			http.Error(w, "OIDC login requests are temporarily limited", http.StatusTooManyRequests)
+			return
+		}
 		log.Printf("OIDC login start: state storage failed: %v", err)
 		h.loginError(w, r, "unavailable")
 		return
@@ -181,6 +224,58 @@ func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: stateCookie, Value: state, Path: h.callbackPath(), MaxAge: int(stateLifetime.Seconds()), Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 	authURL := h.oauth.AuthCodeURL(state, oauth2.S256ChallengeOption(verifier), oauth2.SetAuthURLParam("nonce", nonce))
 	http.Redirect(w, r, authURL, http.StatusSeeOther)
+}
+
+// admitLocal bounds requests before any database work on this replica.
+func (h *Handler) admitLocal() bool {
+	h.limitMu.Lock()
+	defer h.limitMu.Unlock()
+	now := time.Now()
+	if now.Sub(h.limitSince) >= time.Second {
+		h.limitSince = now
+		h.limitStarts = 0
+	}
+	if h.limitStarts >= localStartsPerSecond {
+		return false
+	}
+	h.limitStarts++
+	return true
+}
+
+// storeState serializes a shared rate limit and outstanding-state cap before
+// inserting an authorization request, so concurrent replicas use one budget.
+func (h *Handler) storeState(record *models.OIDCLoginState) error {
+	// SQLite ignores SELECT FOR UPDATE, so serialize this process's requests too.
+	h.storeMu.Lock()
+	defer h.storeMu.Unlock()
+	return h.db.Transaction(func(tx *gorm.DB) error {
+		var gate models.OIDCLoginGate
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&gate, 1).Error; err != nil {
+			return err
+		}
+		now := time.Now()
+		if now.Sub(gate.WindowStart) >= time.Minute {
+			gate.WindowStart = now
+			gate.Starts = 0
+		}
+		if gate.Starts >= globalStartsPerMinute {
+			return errLoginLimit
+		}
+		if err := tx.Model(&gate).Updates(map[string]interface{}{"window_start": gate.WindowStart, "starts": gate.Starts + 1}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("expires_at < ?", now).Delete(&models.OIDCLoginState{}).Error; err != nil {
+			return err
+		}
+		var outstanding int64
+		if err := tx.Model(&models.OIDCLoginState{}).Count(&outstanding).Error; err != nil {
+			return err
+		}
+		if outstanding >= maxOutstandingStates {
+			return errLoginLimit
+		}
+		return tx.Create(record).Error
+	})
 }
 
 // callback consumes the browser-bound state once, verifies the ID token, and

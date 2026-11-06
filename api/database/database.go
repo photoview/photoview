@@ -155,6 +155,7 @@ var database_models []interface{} = []interface{}{
 	&models.User{},
 	&models.AccessToken{},
 	&models.OIDCLoginState{},
+	&models.OIDCLoginGate{},
 	&models.SiteInfo{},
 	&models.Media{},
 	&models.MediaURL{},

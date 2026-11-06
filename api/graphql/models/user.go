@@ -50,6 +50,13 @@ type OIDCLoginState struct {
 	ExpiresAt    time.Time `gorm:"not null;index"`
 }
 
+// OIDCLoginGate serializes login-start admission across Photoview replicas.
+type OIDCLoginGate struct {
+	ID          uint      `gorm:"primaryKey"`
+	WindowStart time.Time `gorm:"not null"`
+	Starts      uint      `gorm:"not null"`
+}
+
 type UserPreferences struct {
 	Model
 	UserID   int  `gorm:"not null;index"`
