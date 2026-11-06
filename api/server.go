@@ -33,6 +33,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
+// main initializes the database, background workers, HTTP routes, and optional
+// OIDC login before serving Photoview.
 func main() {
 	log.Println("Starting Photoview...")
 

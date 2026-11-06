@@ -14,6 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// TestConfigFromEnvironment covers disabled, incomplete, and valid OIDC settings.
 func TestConfigFromEnvironment(t *testing.T) {
 	config, err := ConfigFromEnvironment()
 	require.NoError(t, err)
@@ -30,6 +31,8 @@ func TestConfigFromEnvironment(t *testing.T) {
 	require.Equal(t, "max", config.SubjectMap["subject-id"])
 }
 
+// TestStateIsBrowserBoundAndSingleUse checks that authorization state requires
+// its browser cookie and is consumed by the first cookie-bound callback.
 func TestStateIsBrowserBoundAndSingleUse(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)

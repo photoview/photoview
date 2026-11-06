@@ -21,6 +21,8 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 )
 
+// TestSignedOIDCCallbackIssuesExistingUserSession verifies that a signed ID
+// token maps to an existing user and creates a Photoview session.
 func TestSignedOIDCCallbackIssuesExistingUserSession(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
