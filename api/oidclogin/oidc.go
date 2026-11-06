@@ -248,7 +248,8 @@ func (h *Handler) storeState(record *models.OIDCLoginState) error {
 	// SQLite ignores SELECT FOR UPDATE, so serialize this process's requests too.
 	h.storeMu.Lock()
 	defer h.storeMu.Unlock()
-	return h.db.Transaction(func(tx *gorm.DB) error {
+	limited := false
+	err := h.db.Transaction(func(tx *gorm.DB) error {
 		var gate models.OIDCLoginGate
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&gate, 1).Error; err != nil {
 			return err
@@ -272,10 +273,20 @@ func (h *Handler) storeState(record *models.OIDCLoginState) error {
 			return err
 		}
 		if outstanding >= maxOutstandingStates {
-			return errLoginLimit
+			// Commit the gate charge even though no state is inserted; otherwise
+			// repeated cap rejections would bypass the shared rate budget.
+			limited = true
+			return nil
 		}
 		return tx.Create(record).Error
 	})
+	if err != nil {
+		return err
+	}
+	if limited {
+		return errLoginLimit
+	}
+	return nil
 }
 
 // callback consumes the browser-bound state once, verifies the ID token, and

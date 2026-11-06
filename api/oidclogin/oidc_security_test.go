@@ -93,14 +93,23 @@ func TestOutstandingStateCap(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(&models.OIDCLoginState{}, &models.OIDCLoginGate{}))
-	require.NoError(t, db.Create(&models.OIDCLoginGate{ID: 1, WindowStart: time.Now()}).Error)
+	require.NoError(t, db.Create(&models.OIDCLoginGate{ID: 1, WindowStart: time.Now(), Starts: globalStartsPerMinute - 2}).Error)
 	states := make([]models.OIDCLoginState, maxOutstandingStates)
 	for i := range states {
 		states[i] = models.OIDCLoginState{StateHash: fmt.Sprintf("%064x", i), ExpiresAt: time.Now().Add(time.Minute)}
 	}
 	require.NoError(t, db.CreateInBatches(states, 100).Error)
-	err = (&Handler{db: db}).storeState(&models.OIDCLoginState{StateHash: "next", ExpiresAt: time.Now().Add(time.Minute)})
-	require.True(t, errors.Is(err, errLoginLimit))
+	h := &Handler{db: db}
+	for range 3 {
+		err = h.storeState(&models.OIDCLoginState{StateHash: "next", ExpiresAt: time.Now().Add(time.Minute)})
+		require.True(t, errors.Is(err, errLoginLimit))
+	}
+	var gate models.OIDCLoginGate
+	require.NoError(t, db.First(&gate, 1).Error)
+	require.Equal(t, uint(globalStartsPerMinute), gate.Starts)
+	var count int64
+	require.NoError(t, db.Model(&models.OIDCLoginState{}).Count(&count).Error)
+	require.Equal(t, int64(maxOutstandingStates), count)
 }
 
 // TestConcurrentSQLiteStarts checks that one handler serializes state writes.
