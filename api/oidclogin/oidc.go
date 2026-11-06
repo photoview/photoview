@@ -87,6 +87,8 @@ func ConfigFromEnvironment() (*Config, error) {
 	return &Config{issuer, clientID, clientSecret, redirect, success, subjects}, nil
 }
 
+// New validates the OIDC URLs and discovers the provider before enabling SSO.
+// A nil config leaves local password login as the only sign-in method.
 func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) (*Handler, error) {
 	if config == nil {
 		return nil, nil
@@ -117,6 +119,8 @@ func New(ctx context.Context, db *gorm.DB, config *Config, callbackPath string) 
 	}, nil
 }
 
+// randomString returns 32 cryptographically random bytes as a URL-safe value.
+// It is used for browser state and the ID-token nonce.
 func randomString() (string, error) {
 	value := make([]byte, 32)
 	if _, err := rand.Read(value); err != nil {
@@ -148,6 +152,9 @@ func (h *Handler) status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"enabled":true}`))
 }
+
+// start persists a short-lived authorization request and binds its state to
+// the browser before redirecting to the provider with PKCE and a nonce.
 func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	state, err := randomString()
@@ -175,6 +182,9 @@ func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 	authURL := h.oauth.AuthCodeURL(state, oauth2.S256ChallengeOption(verifier), oauth2.SetAuthURLParam("nonce", nonce))
 	http.Redirect(w, r, authURL, http.StatusSeeOther)
 }
+
+// callback consumes the browser-bound state once, verifies the ID token, and
+// issues a new Photoview session for an existing, explicitly mapped user.
 func (h *Handler) callback(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	cookie, err := r.Cookie(stateCookie)
@@ -251,6 +261,9 @@ func (h *Handler) callback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "auth-token", Value: accessToken.Value, Path: "/", Expires: accessToken.Expire, Secure: true, SameSite: http.SameSiteLaxMode})
 	http.Redirect(w, r, h.successURL.String(), http.StatusSeeOther)
 }
+
+// idTokenNonce reads the nonce claim from an ID token, returning an empty
+// value when the token or its claims cannot be read so the nonce check fails.
 func idTokenNonce(token *oidc.IDToken) string {
 	if token == nil {
 		return ""
