@@ -67,8 +67,8 @@ const InitialSetupPage = () => {
       onCompleted: data => {
         if (!data.initialSetupWizard) return
 
-        const { success, token } = data.initialSetupWizard
-        if (success && token) login(token)
+        const { success } = data.initialSetupWizard
+        if (success) login()
       },
     })
 
