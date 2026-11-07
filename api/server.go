@@ -24,7 +24,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
-	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/scanner/queue"
 	"github.com/photoview/photoview/api/server"
 	"github.com/photoview/photoview/api/utils"
 
@@ -33,6 +33,8 @@ import (
 
 func main() {
 	log.Println("Starting Photoview...")
+
+	ctx := context.Background()
 
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found. If Photoview runs in Docker, this is expected and correct.")
@@ -59,7 +61,7 @@ func main() {
 	}
 	defer exifCleanup()
 
-	if err := scanner_queue.InitializeScannerQueue(db); err != nil {
+	if err := queue.Initialize(ctx, db); err != nil {
 		log.Panicf("Could not initialize scanner queue: %s\n", err)
 	}
 
@@ -149,7 +151,7 @@ func setupGracefulShutdown(svr *http.Server) {
 
 		// Shutdown scanners in correct order
 		periodic_scanner.ShutdownPeriodicScanner()
-		scanner_queue.CloseScannerQueue()
+		queue.Close()
 
 		if err := svr.Shutdown(ctx); err != nil {
 			log.Printf("Server shutdown error: %s", err)
