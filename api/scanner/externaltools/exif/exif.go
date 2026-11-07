@@ -1,8 +1,11 @@
 package exif
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
@@ -42,6 +45,10 @@ func Initialize() (func(), error) {
 
 var globalMu sync.Mutex
 
+// queryTimeout bounds one shared exiftool request. The scanner holds globalMu
+// until it returns, so a stuck process can stall every worker for at most this long.
+var queryTimeout = time.Minute
+
 func Parse(filepath string) (*models.MediaEXIF, error) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
@@ -55,7 +62,7 @@ func Parse(filepath string) (*models.MediaEXIF, error) {
 		exiftool.TimeAll
 		exiftool.GPS
 	}
-	if err := globalExifParser.QueryJSONTagsByNumber(filepath, &values); err != nil {
+	if err := queryJSON(filepath, &values); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +109,7 @@ func MIMEType(filepath string) (string, error) {
 	}
 
 	var mime exiftool.MIMEType
-	if err := globalExifParser.QueryJSONTagsByNumber(filepath, &mime); err != nil {
+	if err := queryJSON(filepath, &mime); err != nil {
 		return "", err
 	}
 
@@ -112,4 +119,50 @@ func MIMEType(filepath string) (string, error) {
 
 	return *mime.MIMEType, nil
 
+}
+
+// queryJSON runs one bounded exiftool query. Caller holds globalMu.
+// A timed-out parser is replaced before the lock is released.
+func queryJSON(file string, value any) error {
+	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
+	defer cancel()
+
+	err := globalExifParser.QueryJSONTagsByNumberContext(ctx, file, value)
+	if err == nil || !isQueryTimeout(err) {
+		return err
+	}
+
+	log.Warn(nil, "exiftool query timed out; restarting parser", "file", file, "error", err)
+
+	if restartErr := restartExifParser(); restartErr != nil {
+		return fmt.Errorf("%w; %w", err, restartErr)
+	}
+
+	return err
+}
+
+func isQueryTimeout(err error) bool {
+	return errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled)
+}
+
+// restartExifParser replaces a force-terminated parser. Caller holds globalMu.
+func restartExifParser() error {
+	old := globalExifParser
+	globalExifParser = nil
+
+	if old != nil {
+		if err := old.Close(); err != nil {
+			log.Error(nil, "Cleanup exiftool error", "error", err)
+		}
+	}
+
+	parser, err := exiftool.New()
+	if err != nil {
+		return fmt.Errorf("restart exiftool: %w", err)
+	}
+
+	globalExifParser = parser
+	log.Info(nil, "Restarted exiftool.", "binary_path", parser.BinaryPath(), "version", parser.Version())
+
+	return nil
 }
