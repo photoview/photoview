@@ -83,6 +83,7 @@ Password: **demo**
 - **Face recognition**. Faces will automatically be detected in photos, and photos of the same person will be grouped together.
 - **Performant**. Thumbnails are automatically generated and photos first load when they are visible on the screen. In full screen, thumbnails are displayed until the high-resolution image has been fully loaded.
 - **Secure**. All media resources are protected with a cookie-token, all passwords are properly hashed, and the API uses a strict [CORS policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
+- **Optional single sign-on**. OpenID Connect can be enabled alongside local password login for existing users; see the [OIDC setup guide](./OIDC.md).
 
 ## Supported platforms
 

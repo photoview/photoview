@@ -60,6 +60,10 @@
       },
       "title": "初始设置"
     },
+    "oidc_failed": "",
+    "oidc_invalid_state": "",
+    "oidc_not_linked": "",
+    "oidc_sign_in": "",
     "welcome": "欢迎使用 Photoview"
   },
   "meta": {
