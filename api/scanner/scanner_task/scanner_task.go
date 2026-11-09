@@ -54,6 +54,8 @@ const (
 	taskCtxKeyAlbum      taskCtxKeyType = "task_album"
 	taskCtxKeyAlbumCache taskCtxKeyType = "task_album_cache"
 	taskCtxKeyDatabase   taskCtxKeyType = "task_database"
+
+	taskCtxKeyUnscannedMediaPaths taskCtxKeyType = "task_unscanned_media_paths"
 )
 
 func (c TaskContext) GetAlbum() *models.Album {
@@ -66,6 +68,18 @@ func (c TaskContext) GetCache() *scanner_cache.AlbumScannerCache {
 
 func (c TaskContext) GetDB() *gorm.DB {
 	return c.Context.Value(taskCtxKeyDatabase).(*gorm.DB)
+}
+
+// GetUnscannedMediaPaths returns the paths of media files that are on disk but
+// failed to scan, as recorded by WithUnscannedMediaPaths.
+func (c TaskContext) GetUnscannedMediaPaths() []string {
+	paths, _ := c.Context.Value(taskCtxKeyUnscannedMediaPaths).([]string)
+
+	return paths
+}
+
+func (c TaskContext) WithUnscannedMediaPaths(paths []string) TaskContext {
+	return c.WithValue(taskCtxKeyUnscannedMediaPaths, paths)
 }
 
 func (c TaskContext) DatabaseTransaction(transFunc func(ctx TaskContext) error, opts ...*sql.TxOptions) error {
