@@ -252,17 +252,11 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 }
 
 // ChangeUserPreferences is the resolver for the changeUserPreferences field.
-func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string) (*models.UserPreferences, error) {
+func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *string, searchResultLimit *int) (*models.UserPreferences, error) {
 	db := r.DB(ctx)
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
-	}
-
-	var langTrans *models.LanguageTranslation = nil
-	if language != nil {
-		lng := models.LanguageTranslation(*language)
-		langTrans = &lng
 	}
 
 	var userPref models.UserPreferences
@@ -270,8 +264,27 @@ func (r *mutationResolver) ChangeUserPreferences(ctx context.Context, language *
 		return nil, err
 	}
 
+	// An omitted argument leaves that preference alone. Assigning every field
+	// on every call would mean a caller changing one setting silently resets
+	// the others - and a client has no reason to know about settings it isn't
+	// touching. An empty language string still clears the language, which
+	// BeforeSave turns back into nil.
 	userPref.UserID = user.ID
-	userPref.Language = langTrans
+	if language != nil {
+		lng := models.LanguageTranslation(*language)
+		userPref.Language = &lng
+	}
+	if searchResultLimit != nil {
+		// Zero already means "no limit", so it cannot also mean "forget my
+		// setting". A negative value is the way back to the server default -
+		// there is no other reading for it, since the search layer would treat
+		// it as unlimited anyway.
+		if *searchResultLimit < 0 {
+			userPref.SearchResultLimit = nil
+		} else {
+			userPref.SearchResultLimit = searchResultLimit
+		}
+	}
 
 	if err := db.Save(&userPref).Error; err != nil {
 		return nil, err

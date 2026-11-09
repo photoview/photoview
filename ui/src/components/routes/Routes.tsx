@@ -21,6 +21,7 @@ const TimelinePage = React.lazy(
   () => import('../../Pages/TimelinePage/TimelinePage')
 )
 const PlacesPage = React.lazy(() => import('../../Pages/PlacesPage/PlacesPage'))
+const SearchPage = React.lazy(() => import('../../Pages/SearchPage/SearchPage'))
 
 const LoginPage = React.lazy(() => import('../../Pages/LoginPage/LoginPage'))
 const InitialSetupPage = React.lazy(
@@ -93,6 +94,10 @@ const Routes = () => {
     {
       path: '/places',
       element: authorized(<PlacesPage />),
+    },
+    {
+      path: '/search',
+      element: authorized(<SearchPage />),
     },
     {
       path: '/settings',

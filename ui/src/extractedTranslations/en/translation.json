@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Media"
-      }
+      },
+      "view_all_results": "View all results"
     }
   },
   "login_page": {
@@ -132,6 +133,15 @@
   "routes": {
     "page_not_found": "Page not found"
   },
+  "search_page": {
+    "albums_heading": "Albums",
+    "error": "Error loading results",
+    "heading": "Search results for \"{{query}}\"",
+    "no_results": "No results found",
+    "title": "Search results for \"{{query}}\"",
+    "truncated_one": "Albums and photos are each capped at {{count}} results, so there may be more than is shown here. Narrow the search to see fewer, more relevant results.",
+    "truncated_other": "Albums and photos are each capped at {{count}} results, so there may be more than is shown here. Narrow the search to see fewer, more relevant results."
+  },
   "settings": {
     "concurrent_workers": {
       "description": "The maximum amount of scanner jobs that is allowed to run at once",
@@ -166,6 +176,10 @@
       "language_selector": {
         "placeholder": "Select language"
       },
+      "search_result_limit": {
+        "description": "How many albums and how many media files a search returns. Enter 0 to show every match, or leave it empty to use the default.",
+        "label": "Search results"
+      },
       "theme": {
         "auto": {
           "label": "Same as system"
@@ -179,7 +193,8 @@
         },
         "title": "Theme preferences"
       },
-      "title": "User preferences"
+      "title": "User preferences",
+      "title_with_username": "User preferences ({{username}})"
     },
     "users": {
       "add_user": {

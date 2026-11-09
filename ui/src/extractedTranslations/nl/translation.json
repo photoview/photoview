@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Media"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,15 @@
   "routes": {
     "page_not_found": "Pagina niet gevonden"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_one": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Het maximale aantal scanprocessen dat tegelijk mag draaien",
@@ -166,6 +176,10 @@
       "language_selector": {
         "placeholder": "Selecteer taal"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": "Zelfde als systeem"
@@ -179,7 +193,8 @@
         },
         "title": "Thema-instellingen"
       },
-      "title": "Gebruikersvoorkeuren"
+      "title": "Gebruikersvoorkeuren",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
