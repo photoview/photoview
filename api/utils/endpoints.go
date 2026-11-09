@@ -283,13 +283,13 @@ func managePort(parsedURL *url.URL, endpoints []*url.URL, urlStr string) ([]*url
 		switch port {
 		case "":
 			// Add with default port 80
-			extendedURL, _ := url.Parse("http://" + host + ":80")
+			extendedURL := &url.URL{Scheme: scheme, Host: net.JoinHostPort(host, "80")}
 			if !contains(endpoints, extendedURL) {
 				endpoints = append(endpoints, extendedURL)
 			}
 		case "80":
 			// Add without port
-			simpleURL, _ := url.Parse("http://" + host)
+			simpleURL := &url.URL{Scheme: scheme, Host: strings.TrimSuffix(parsedURL.Host, ":"+port)}
 			if !contains(endpoints, simpleURL) {
 				endpoints = append(endpoints, simpleURL)
 			}
@@ -298,13 +298,13 @@ func managePort(parsedURL *url.URL, endpoints []*url.URL, urlStr string) ([]*url
 		switch port {
 		case "":
 			// Add with default port 443
-			extendedURL, _ := url.Parse("https://" + host + ":443")
+			extendedURL := &url.URL{Scheme: scheme, Host: net.JoinHostPort(host, "443")}
 			if !contains(endpoints, extendedURL) {
 				endpoints = append(endpoints, extendedURL)
 			}
 		case "443":
 			// Add without port
-			simpleURL, _ := url.Parse("https://" + host)
+			simpleURL := &url.URL{Scheme: scheme, Host: strings.TrimSuffix(parsedURL.Host, ":"+port)}
 			if !contains(endpoints, simpleURL) {
 				endpoints = append(endpoints, simpleURL)
 			}

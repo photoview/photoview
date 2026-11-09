@@ -461,6 +461,44 @@ func TestUiEndpointUrlsPortNormalization(t *testing.T) {
 	}
 }
 
+func TestUiEndpointUrlsIPPortNormalization(t *testing.T) {
+	for _, host := range []string{"127.0.0.1", "[::1]", "[::ffff:192.0.2.1]"} {
+		for _, tt := range []struct {
+			scheme string
+			port   string
+		}{
+			{scheme: "http", port: "80"},
+			{scheme: "https", port: "443"},
+		} {
+			for _, port := range []string{"", ":" + tt.port, ":8080"} {
+				endpoint := tt.scheme + "://" + host + port
+				t.Run(endpoint, func(t *testing.T) {
+					t.Setenv("PHOTOVIEW_SERVE_UI", "0")
+					t.Setenv("PHOTOVIEW_UI_ENDPOINTS", endpoint)
+
+					var urls []*url.URL
+					require.NotPanics(t, func() {
+						urls = utils.ComputeUiEndpointUrlsForTest()
+					})
+
+					want := []string{tt.scheme + "://" + host, tt.scheme + "://" + host + ":" + tt.port}
+					if port == ":8080" {
+						want = []string{endpoint}
+					}
+					got := make([]string, len(urls))
+					for i, u := range urls {
+						require.NotNil(t, u)
+						got[i] = u.String()
+						_, err := url.Parse(got[i])
+						require.NoError(t, err)
+					}
+					assert.ElementsMatch(t, want, got)
+				})
+			}
+		}
+	}
+}
+
 // =============================================================================
 // Integration Tests
 // =============================================================================

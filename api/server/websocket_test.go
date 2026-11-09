@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -59,22 +60,22 @@ func configureTestEndpointsFromEnv(t *testing.T) {
 						switch port {
 						case "":
 							// Add variant with explicit port 80
-							withPort, _ := url.Parse("http://" + host + ":80")
+							withPort := &url.URL{Scheme: scheme, Host: net.JoinHostPort(host, "80")}
 							uiEndpoints = append(uiEndpoints, withPort)
 						case "80":
 							// Add variant without port
-							withoutPort, _ := url.Parse("http://" + host)
+							withoutPort := &url.URL{Scheme: scheme, Host: strings.TrimSuffix(parsedURL.Host, ":"+port)}
 							uiEndpoints = append(uiEndpoints, withoutPort)
 						}
 					case "https":
 						switch port {
 						case "":
 							// Add variant with explicit port 443
-							withPort, _ := url.Parse("https://" + host + ":443")
+							withPort := &url.URL{Scheme: scheme, Host: net.JoinHostPort(host, "443")}
 							uiEndpoints = append(uiEndpoints, withPort)
 						case "443":
 							// Add variant without port
-							withoutPort, _ := url.Parse("https://" + host)
+							withoutPort := &url.URL{Scheme: scheme, Host: strings.TrimSuffix(parsedURL.Host, ":"+port)}
 							uiEndpoints = append(uiEndpoints, withoutPort)
 						}
 					}
@@ -353,7 +354,8 @@ func TestWebsocketCheckOriginSanitizationOfMaliciousOrigin(t *testing.T) {
 
 func TestWebsocketCheckOriginIPv6Endpoints(t *testing.T) {
 	t.Setenv("PHOTOVIEW_SERVE_UI", "0")
-	t.Setenv("PHOTOVIEW_UI_ENDPOINTS", "https://[::1]:8080,https://[2001:db8::1]:443")
+	t.Setenv("PHOTOVIEW_UI_ENDPOINTS", "https://[::1]:8080,https://[2001:db8::1]:443,"+
+		"http://[::1],https://[::1],http://[2001:db8::1]:80")
 	configureTestEndpointsFromEnv(t)
 
 	testCases := []struct {
@@ -363,6 +365,10 @@ func TestWebsocketCheckOriginIPv6Endpoints(t *testing.T) {
 	}{
 		{"IPv6 localhost with port", "https://[::1]:8080", true},
 		{"IPv6 address with port", "https://[2001:db8::1]:443", true},
+		{"IPv6 address without HTTPS port", "https://[2001:db8::1]", true},
+		{"IPv6 address without HTTP port", "http://[2001:db8::1]", true},
+		{"IPv6 localhost with default HTTP port", "http://[::1]:80", true},
+		{"IPv6 localhost with default HTTPS port", "https://[::1]:443", true},
 		{"IPv6 localhost different port", "https://[::1]:9000", false},
 		{"IPv4 localhost", "https://127.0.0.1:8080", false},
 	}
