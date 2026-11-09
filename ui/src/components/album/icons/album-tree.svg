@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="15px" height="13px" viewBox="0 0 15 13" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+    <line x1="2" y1="2" x2="2" y2="11" />
+    <line x1="2" y1="2" x2="10" y2="2" />
+    <line x1="2" y1="6.5" x2="10" y2="6.5" />
+    <line x1="2" y1="11" x2="10" y2="11" />
+  </g>
+  <g fill="currentColor">
+    <circle cx="1.5" cy="2" r="1.5" />
+    <circle cx="1.5" cy="6.5" r="1.5" />
+    <circle cx="1.5" cy="11" r="1.5" />
+    <rect x="10" y="0.5" width="4" height="3" rx="0.75" />
+    <rect x="10" y="5" width="4" height="3" rx="0.75" />
+    <rect x="10" y="9.5" width="4" height="3" rx="0.75" />
+  </g>
+</svg>

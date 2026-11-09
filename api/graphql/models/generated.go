@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+// One album id's worth of direct children, as returned by albumTreeChildren.
+type AlbumTreeChildren struct {
+	AlbumID  int      `json:"albumId"`
+	Children []*Album `json:"children"`
+}
+
 type AuthorizeResult struct {
 	Success bool `json:"success"`
 	// A textual status message describing the result, can be used to show an error message when `success` is false

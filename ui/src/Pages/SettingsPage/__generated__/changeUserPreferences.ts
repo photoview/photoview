@@ -13,6 +13,10 @@ export interface changeUserPreferences_changeUserPreferences {
   __typename: "UserPreferences";
   id: string;
   language: LanguageTranslation | null;
+  /**
+   * Whether to show the album tree next to the gallery. Off unless the user turns it on.
+   */
+  showAlbumTree: boolean | null;
 }
 
 export interface changeUserPreferences {
@@ -24,4 +28,5 @@ export interface changeUserPreferences {
 
 export interface changeUserPreferencesVariables {
   language?: string | null;
+  showAlbumTree?: boolean | null;
 }

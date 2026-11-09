@@ -15,6 +15,18 @@
       "type": "類型"
     }
   },
+  "album_tree": {
+    "children_error": "",
+    "collapse": "",
+    "empty": "",
+    "error": "",
+    "expand": "",
+    "filter_truncated": "",
+    "label": "",
+    "mobile_open": "",
+    "no_matches": "",
+    "search_error": ""
+  },
   "general": {
     "action": {
       "add": "新增",
@@ -22,6 +34,7 @@
       "remove": "移除",
       "save": "儲存"
     },
+    "close": "",
     "loading": {
       "album": "正在載入相簿",
       "default": "載入中...",
@@ -165,6 +178,11 @@
       },
       "language_selector": {
         "placeholder": "選擇語言"
+      },
+      "show_album_tree": {
+        "checkbox_label": "",
+        "description": "",
+        "title": ""
       },
       "theme": {
         "auto": {
