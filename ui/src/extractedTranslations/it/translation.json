@@ -155,6 +155,13 @@
     },
     "scanner": {
       "description": "Verranno effettuate delle scansioni per tutti gli utenti alla ricerca di media nuovi o aggiornati",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Scansiona per tutti",
       "title": "Scansioni"
     },

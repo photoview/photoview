@@ -155,6 +155,13 @@
     },
     "scanner": {
       "description": "Vil scanne alle brugere for nye eller opdaterede medier",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Scan alle brugere",
       "title": "Scanner"
     },

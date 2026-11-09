@@ -155,6 +155,13 @@
     },
     "scanner": {
       "description": "Analyser tous les utilisateurs pour détecter de nouveaux médias ou des médias mis à jour",
+      "queue_status": {
+        "cancel": "",
+        "cancel_all": "",
+        "queued": "",
+        "running": "",
+        "title": ""
+      },
       "scan_all_users": "Analyser tous les utilisateurs",
       "title": "Analyse"
     },
