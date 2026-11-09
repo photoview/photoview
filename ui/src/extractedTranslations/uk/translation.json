@@ -263,6 +263,11 @@
       "title_placeholder": "Назва альбому"
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "{{count}} Байт",
         "byte_few": "",
@@ -289,7 +294,8 @@
         "dimensions": "Габарити",
         "file_size": "Розмір",
         "file_type": "Тип",
-        "name": "Імʼя"
+        "name": "Імʼя",
+        "send": ""
       },
       "title": "Завантажити"
     },
