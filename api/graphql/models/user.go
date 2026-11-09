@@ -167,7 +167,9 @@ func (user *User) FillAlbums(db *gorm.DB) error {
 func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	filter := func(query *gorm.DB) *gorm.DB {
 		return query.Where(
-			"EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = id LIMIT 1)",
+			// albums.id, not id: the walk's result is joined against the albums
+			// table, so an unqualified id would be ambiguous.
+			"EXISTS (SELECT 1 FROM user_albums WHERE user_albums.user_id = ? AND user_albums.album_id = albums.id LIMIT 1)",
 			user.ID)
 	}
 
