@@ -319,13 +319,15 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 		}
 
 		// Unlabeled face groups can hold faces from the pictures of other users. Only
-		// report the ones from pictures the user can access, as each face exposes its media.
+		// report faces in albums this caller owns, including administrators: each
+		// face exposes its media, and listing a face group already applies the same
+		// album limit. This does not change detection during a scan.
 		updatedImageFaceIDs := make([]int, len(updatedImageFaces))
 		for i, imageFace := range updatedImageFaces {
 			updatedImageFaceIDs[i] = imageFace.ID
 		}
 
-		userOwnedImageFaces, err = getUserOwnedImageFaces(tx, user, updatedImageFaceIDs)
+		userOwnedImageFaces, err = imageFacesInUserAlbums(tx, user, updatedImageFaceIDs)
 
 		return err
 	})

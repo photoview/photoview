@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
@@ -144,12 +145,12 @@ func ListAlbumShares(db *gorm.DB, user *models.User, albumID int) ([]*models.Sha
 // ListMediaShares returns the share tokens of a media item. Like ListAlbumShares,
 // token values are only disclosed to administrators and to users who own the
 // media's album; any other caller receives an empty list.
-func ListMediaShares(db *gorm.DB, user *models.User, media *models.Media) ([]*models.ShareToken, error) {
+func ListMediaShares(ctx context.Context, db *gorm.DB, user *models.User, media *models.Media) ([]*models.ShareToken, error) {
 	if user == nil {
 		return []*models.ShareToken{}, nil
 	}
 	if !user.Admin {
-		ownsMedia, err := user.OwnsMedia(db, media)
+		ownsMedia, err := auth.UserOwnsMedia(ctx, db, user, media)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to validate media album owner with database")
 		}

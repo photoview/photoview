@@ -1,11 +1,13 @@
 package resolvers
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 // A face group the caller has no image in must be treated as missing, rather
@@ -155,4 +157,105 @@ func TestGetUserOwnedImageFacesWithManyIDs(t *testing.T) {
 	faces, err = getUserOwnedImageFaces(f.db, admin, ids)
 	require.NoError(t, err)
 	assert.Len(t, faces, 2)
+}
+
+// Repeated IDs used to be returned once by a single IN query. Batching must
+// keep that, or a later statement binds the repeated list twice.
+func TestGetUserOwnedImageFacesDedupesAcrossBatches(t *testing.T) {
+	f := setupTwoTenantFixtures(t)
+
+	group := f.addFaceGroup(t, nil)
+	aliceFace := f.addFace(t, f.aliceMedia[0], group)
+	bobFace := f.addFace(t, f.bobMedia[0], group)
+
+	ids := make([]int, 0, imageFaceLookupBatchSize+2)
+	for range imageFaceLookupBatchSize {
+		ids = append(ids, aliceFace.ID)
+	}
+	ids = append(ids, bobFace.ID, aliceFace.ID)
+
+	faces, err := getUserOwnedImageFaces(f.db, f.alice, ids)
+	require.NoError(t, err)
+	require.Len(t, faces, 1)
+	assert.Equal(t, aliceFace.ID, faces[0].ID)
+}
+
+// Album membership is a subquery, so owning more albums does not add a bound
+// parameter per album on top of the face-ID batch.
+func TestGetUserOwnedImageFacesBoundsAlbumParameters(t *testing.T) {
+	f := setupTwoTenantFixtures(t)
+	for i := range 4 {
+		album := models.Album{Title: "extra", Path: "/photos/alice-extra-" + string(rune('a'+i))}
+		require.NoError(t, f.db.Save(&album).Error)
+		require.NoError(t, f.db.Model(f.alice).Association("Albums").Append(&album))
+	}
+
+	group := f.addFaceGroup(t, nil)
+	aliceFace := f.addFace(t, f.aliceMedia[0], group)
+	bobFace := f.addFace(t, f.bobMedia[0], group)
+
+	ids := make([]int, 0, imageFaceLookupBatchSize+1)
+	for id := 100000; id < 100000+imageFaceLookupBatchSize; id++ {
+		ids = append(ids, id)
+	}
+	ids[0] = bobFace.ID
+	ids = append(ids, aliceFace.ID)
+
+	var boundCounts []int
+	var sawMembershipSubquery bool
+	const callbackName = "test:face-lookup-params"
+	_ = f.db.Callback().Query().Remove(callbackName)
+	require.NoError(t, f.db.Callback().Query().After("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		sql := tx.Statement.SQL.String()
+		if !strings.Contains(sql, "image_faces") {
+			return
+		}
+		boundCounts = append(boundCounts, len(tx.Statement.Vars))
+		if strings.Contains(strings.ToLower(sql), "user_albums") {
+			sawMembershipSubquery = true
+		}
+	}))
+	t.Cleanup(func() { _ = f.db.Callback().Query().Remove(callbackName) })
+
+	faces, err := getUserOwnedImageFaces(f.db, f.alice, ids)
+	require.NoError(t, err)
+	require.Len(t, faces, 1)
+	assert.Equal(t, aliceFace.ID, faces[0].ID)
+	assert.True(t, sawMembershipSubquery, "album membership must be a user_albums subquery")
+	assert.Equal(t, []int{imageFaceLookupBatchSize + 1, 2}, boundCounts)
+}
+
+// recognizeUnlabeledFaces exposes each face's media. Administrators follow the
+// same album rule as the media query, without changing move or detach.
+func TestRecognizeUnlabeledFacesLimitsAdministratorsToOwnAlbums(t *testing.T) {
+	detector := useStubFaceDetector(t)
+	f := setupTwoTenantFixtures(t)
+
+	password := "1234"
+	admin, err := models.RegisterUser(f.db, "admin", &password, true)
+	require.NoError(t, err)
+	var ownedAlbum models.Album
+	require.NoError(t, f.db.First(&ownedAlbum, f.aliceMedia[0].AlbumID).Error)
+	require.NoError(t, f.db.Model(admin).Association("Albums").Append(&ownedAlbum))
+
+	group := f.addFaceGroup(t, nil)
+	aliceFace := f.addFace(t, f.aliceMedia[0], group)
+	bobFace := f.addFace(t, f.bobMedia[0], group)
+	detector.recognized = []*models.ImageFace{aliceFace, bobFace}
+
+	faces, err := (&mutationResolver{f.resolver}).RecognizeUnlabeledFaces(f.ctxFor(admin))
+	require.NoError(t, err)
+	require.Len(t, faces, 1)
+	assert.Equal(t, aliceFace.ID, faces[0].ID)
+
+	outsider, err := models.RegisterUser(f.db, "admin-outsider", &password, true)
+	require.NoError(t, err)
+	faces, err = (&mutationResolver{f.resolver}).RecognizeUnlabeledFaces(f.ctxFor(outsider))
+	require.NoError(t, err)
+	assert.Empty(t, faces)
+
+	// The helper used by move and detach still returns every requested face to an administrator.
+	owned, err := getUserOwnedImageFaces(f.db, outsider, []int{aliceFace.ID, bobFace.ID})
+	require.NoError(t, err)
+	assert.Len(t, owned, 2)
 }

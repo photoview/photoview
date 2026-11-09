@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -141,6 +142,50 @@ func TestMediaAlbumRequiresAlbumOwnership(t *testing.T) {
 			assert.Equal(t, shared.AlbumID, album.ID)
 		})
 	}
+}
+
+// Timeline requests album on up to 200 media items. Ownership is loaded once
+// per request rather than once per item, and a user still cannot read another
+// album.
+func TestMediaAlbumOwnershipIsLoadedOncePerRequest(t *testing.T) {
+	useStubFaceDetector(t)
+	f := setupTwoTenantFixtures(t)
+	resolver := &mediaResolver{f.resolver}
+	ctx := f.ctxFor(f.alice)
+
+	var ownershipQueries int
+	const callbackName = "test:count-album-ownership"
+	_ = f.db.Callback().Query().Remove(callbackName)
+	require.NoError(t, f.db.Callback().Query().After("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		if strings.Contains(strings.ToLower(tx.Statement.SQL.String()), "user_albums") {
+			ownershipQueries++
+		}
+	}))
+	t.Cleanup(func() { _ = f.db.Callback().Query().Remove(callbackName) })
+
+	for _, media := range f.aliceMedia {
+		album, err := resolver.Album(ctx, media)
+		require.NoError(t, err)
+		assert.Equal(t, media.AlbumID, album.ID)
+
+		faces, err := resolver.Faces(ctx, media)
+		require.NoError(t, err)
+		assert.Empty(t, faces)
+
+		shares, err := resolver.Shares(ctx, media)
+		require.NoError(t, err)
+		assert.Empty(t, shares)
+	}
+
+	album, err := resolver.Album(ctx, f.bobMedia[0])
+	assert.ErrorIs(t, err, auth.ErrUnauthorized)
+	assert.Nil(t, album)
+
+	faces, err := resolver.Faces(ctx, f.bobMedia[0])
+	require.NoError(t, err)
+	assert.Empty(t, faces)
+
+	assert.Equal(t, 1, ownershipQueries)
 }
 
 // Face groups carry the names users gave to the people in their photos, so the

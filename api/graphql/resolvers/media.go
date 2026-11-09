@@ -46,14 +46,16 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, obj *models.Media) (*model
 func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
 	db := r.DB(ctx)
 
-	// A share token only grants access to the shared media itself. The album
-	// exposes its other media and sub albums, so it is limited to the album owners.
+	// A media share token and an album share token only grant the shared item.
+	// Media.album exposes the album's other media and sub albums, so it is
+	// limited to users that own the media's album. The field is non-null, and a
+	// share client that requests it receives an authorization error.
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	ownsMedia, err := user.OwnsMedia(db, obj)
+	ownsMedia, err := auth.UserOwnsMedia(ctx, db, user, obj)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +105,7 @@ func (r *mediaResolver) Type(ctx context.Context, obj *models.Media) (models.Med
 
 // Shares is the resolver for the shares field.
 func (r *mediaResolver) Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error) {
-	return actions.ListMediaShares(r.DB(ctx), auth.UserFromContext(ctx), obj)
+	return actions.ListMediaShares(ctx, r.DB(ctx), auth.UserFromContext(ctx), obj)
 }
 
 // Downloads is the resolver for the downloads field.
@@ -153,7 +155,7 @@ func (r *mediaResolver) Faces(ctx context.Context, obj *models.Media) ([]*models
 		return []*models.ImageFace{}, nil
 	}
 
-	ownsMedia, err := user.OwnsMedia(r.DB(ctx), obj)
+	ownsMedia, err := auth.UserOwnsMedia(ctx, r.DB(ctx), user, obj)
 	if err != nil {
 		return nil, err
 	}

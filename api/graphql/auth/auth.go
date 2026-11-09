@@ -70,6 +70,9 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 }
 
 func AddUserToContext(ctx context.Context, user *models.User) context.Context {
+	if ctx.Value(albumAccessContextKey{}) == nil {
+		ctx = context.WithValue(ctx, albumAccessContextKey{}, &albumAccessCache{})
+	}
 	return context.WithValue(ctx, userCtxKey, user)
 }
 
@@ -122,7 +125,7 @@ func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.C
 		}
 
 		// put it in context
-		userCtx := context.WithValue(ctx, userCtxKey, user)
+		userCtx := AddUserToContext(ctx, user)
 
 		// and return it so the resolvers can see it
 		// Return nil for the InitPayload acknowledgment (no custom ack payload needed)

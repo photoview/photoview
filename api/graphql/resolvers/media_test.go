@@ -236,6 +236,38 @@ func TestFavoriteMediaRejectsForeignMedia(t *testing.T) {
 	assert.Equal(t, fixtures.media.ID, media.ID)
 }
 
+// album { media { album } } and a media share that requests Media.album are both
+// refused for the token holder. The owner session still receives the album.
+func TestMediaAlbumHiddenFromAlbumAndMediaShareTokens(t *testing.T) {
+	fixtures := setupMediaTokenFixtures(t)
+	mediaField := &mediaResolver{Resolver: fixtures.resolver.Resolver}
+
+	album, err := fixtures.resolver.Album(context.Background(), fixtures.album.ID, tokenCredentials(fixtures.albumToken))
+	require.NoError(t, err)
+	require.NotNil(t, album)
+
+	sharedMedia, err := (&albumResolver{fixtures.resolver.Resolver}).Media(context.Background(), album, nil, nil, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, sharedMedia)
+	for _, item := range sharedMedia {
+		got, err := mediaField.Album(context.Background(), item)
+		assert.ErrorIs(t, err, auth.ErrUnauthorized)
+		assert.Nil(t, got)
+	}
+
+	media, err := fixtures.resolver.Media(context.Background(), fixtures.media.ID, tokenCredentials(fixtures.mediaToken))
+	require.NoError(t, err)
+	got, err := mediaField.Album(context.Background(), media)
+	assert.ErrorIs(t, err, auth.ErrUnauthorized)
+	assert.Nil(t, got)
+
+	ownerCtx := auth.AddUserToContext(context.Background(), fixtures.user)
+	got, err = mediaField.Album(ownerCtx, fixtures.media)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	assert.Equal(t, fixtures.album.ID, got.ID)
+}
+
 // Share token values of a media item are only visible to the owner of its album.
 func TestMediaSharesOnlyVisibleToAlbumOwner(t *testing.T) {
 	fixtures := setupMediaTokenFixtures(t)
