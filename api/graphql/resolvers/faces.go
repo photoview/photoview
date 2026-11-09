@@ -309,10 +309,25 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 	}
 
 	var updatedImageFaces []*models.ImageFace
+	var userOwnedImageFaces []*models.ImageFace
 
 	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		var err error
 		updatedImageFaces, err = face_detection.GlobalFaceDetector.RecognizeUnlabeledFaces(tx, user)
+		if err != nil {
+			return err
+		}
+
+		// Unlabeled face groups can hold faces from the pictures of other users. Only
+		// report faces in albums this caller owns, including administrators: each
+		// face exposes its media, and listing a face group already applies the same
+		// album limit. This does not change detection during a scan.
+		updatedImageFaceIDs := make([]int, len(updatedImageFaces))
+		for i, imageFace := range updatedImageFaces {
+			updatedImageFaceIDs[i] = imageFace.ID
+		}
+
+		userOwnedImageFaces, err = imageFacesInUserAlbums(tx, user, updatedImageFaceIDs)
 
 		return err
 	})
@@ -321,7 +336,19 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 		return nil, transactionError
 	}
 
-	return updatedImageFaces, nil
+	userOwnedImageFaceIDs := make(map[int]bool, len(userOwnedImageFaces))
+	for _, imageFace := range userOwnedImageFaces {
+		userOwnedImageFaceIDs[imageFace.ID] = true
+	}
+
+	visibleImageFaces := make([]*models.ImageFace, 0, len(userOwnedImageFaces))
+	for _, imageFace := range updatedImageFaces {
+		if userOwnedImageFaceIDs[imageFace.ID] {
+			visibleImageFaces = append(visibleImageFaces, imageFace)
+		}
+	}
+
+	return visibleImageFaces, nil
 }
 
 // DetachImageFaces is the resolver for the detachImageFaces field.

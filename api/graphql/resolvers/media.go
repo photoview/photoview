@@ -44,9 +44,27 @@ func (r *mediaResolver) VideoWeb(ctx context.Context, obj *models.Media) (*model
 
 // Album is the resolver for the album field.
 func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.Album, error) {
-	var album models.Album
-	err := r.DB(ctx).Find(&album, obj.AlbumID).Error
+	db := r.DB(ctx)
+
+	// A media share token and an album share token only grant the shared item.
+	// Media.album exposes the album's other media and sub albums, so it is
+	// limited to users that own the media's album. The field is non-null, and a
+	// share client that requests it receives an authorization error.
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	ownsMedia, err := auth.UserOwnsMedia(ctx, db, user, obj)
 	if err != nil {
+		return nil, err
+	}
+	if !ownsMedia {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.Find(&album, obj.AlbumID).Error; err != nil {
 		return nil, err
 	}
 	return &album, nil
@@ -87,12 +105,7 @@ func (r *mediaResolver) Type(ctx context.Context, obj *models.Media) (models.Med
 
 // Shares is the resolver for the shares field.
 func (r *mediaResolver) Shares(ctx context.Context, obj *models.Media) ([]*models.ShareToken, error) {
-	var shareTokens []*models.ShareToken
-	if err := r.DB(ctx).Where("media_id = ?", obj.ID).Find(&shareTokens).Error; err != nil {
-		return nil, fmt.Errorf("get shares for media (%s): %w", obj.Path, err)
-	}
-
-	return shareTokens, nil
+	return actions.ListMediaShares(ctx, r.DB(ctx), auth.UserFromContext(ctx), obj)
 }
 
 // Downloads is the resolver for the downloads field.
@@ -132,6 +145,21 @@ func (r *mediaResolver) Downloads(ctx context.Context, obj *models.Media) ([]*mo
 // Faces is the resolver for the faces field.
 func (r *mediaResolver) Faces(ctx context.Context, obj *models.Media) ([]*models.ImageFace, error) {
 	if face_detection.GlobalFaceDetector == nil {
+		return []*models.ImageFace{}, nil
+	}
+
+	// Face groups carry the labels set by the album owners, which must not be
+	// disclosed to share token holders or to users of other albums.
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return []*models.ImageFace{}, nil
+	}
+
+	ownsMedia, err := auth.UserOwnsMedia(ctx, r.DB(ctx), user, obj)
+	if err != nil {
+		return nil, err
+	}
+	if !ownsMedia {
 		return []*models.ImageFace{}, nil
 	}
 

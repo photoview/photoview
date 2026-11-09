@@ -179,21 +179,46 @@ func (user *User) OwnsAlbum(db *gorm.DB, album *Album) (bool, error) {
 	return len(ownedParents) > 0, nil
 }
 
-// FavoriteMedia sets/clears a media as favorite for the user
+// OwnsMedia reports whether the media is in an album the user owns, the same
+// rule as the `media` query.
+func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
+	var count int64
+	err := db.
+		Table("user_albums").
+		Where("user_albums.album_id = ?", media.AlbumID).
+		Where("user_albums.user_id = ?", user.ID).
+		Count(&count).Error
+	if err != nil {
+		return false, errors.Wrap(err, "check media album owner in database")
+	}
+
+	return count > 0, nil
+}
+
+// FavoriteMedia sets/clears a media as favorite for the user.
+// The media must belong to an album the user owns, the same rule as the `media` query.
 func (user *User) FavoriteMedia(db *gorm.DB, mediaID int, favorite bool) (*Media, error) {
+	var media Media
+	err := db.
+		Where("media.id = ?", mediaID).
+		Where("EXISTS (SELECT 1 FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)",
+			user.ID).
+		First(&media).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("media not found")
+		}
+		return nil, errors.Wrap(err, "get media from database before favorite update")
+	}
+
 	userMediaData := UserMediaData{
 		UserID:   user.ID,
-		MediaID:  mediaID,
+		MediaID:  media.ID,
 		Favorite: favorite,
 	}
 
 	if err := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&userMediaData).Error; err != nil {
 		return nil, errors.Wrapf(err, "update user favorite media in database")
-	}
-
-	var media Media
-	if err := db.First(&media, mediaID).Error; err != nil {
-		return nil, errors.Wrap(err, "get media from database after favorite update")
 	}
 
 	return &media, nil

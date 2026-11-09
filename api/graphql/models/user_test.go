@@ -229,3 +229,58 @@ func TestUserFavoriteMedia(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, favourite)
 }
+
+func TestUserFavoriteMediaRequiresAlbumOwnership(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	owner, err := models.RegisterUser(db, "owner", nil, false)
+	assert.NoError(t, err)
+	other, err := models.RegisterUser(db, "other", nil, false)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "private", Path: "/photos/private"}
+	assert.NoError(t, db.Save(&album).Error)
+	assert.NoError(t, db.Model(&owner).Association("Albums").Append(&album))
+
+	media := models.Media{Title: "pic", Path: "/photos/private/pic", AlbumID: album.ID}
+	assert.NoError(t, db.Save(&media).Error)
+
+	favMedia, err := other.FavoriteMedia(db, media.ID, true)
+	assert.Error(t, err)
+	assert.Nil(t, favMedia)
+
+	favourite, err := dataloader.NewUserFavoriteLoader(db).Load(&models.UserMediaData{
+		UserID:  other.ID,
+		MediaID: media.ID,
+	})
+	assert.NoError(t, err)
+	assert.False(t, favourite)
+
+	favMedia, err = owner.FavoriteMedia(db, media.ID, true)
+	assert.NoError(t, err)
+	assert.NotNil(t, favMedia)
+}
+
+func TestUserOwnsMedia(t *testing.T) {
+	db := test_utils.DatabaseTest(t)
+
+	owner, err := models.RegisterUser(db, "owner", nil, false)
+	assert.NoError(t, err)
+	other, err := models.RegisterUser(db, "other", nil, false)
+	assert.NoError(t, err)
+
+	album := models.Album{Title: "private", Path: "/photos/private"}
+	assert.NoError(t, db.Save(&album).Error)
+	assert.NoError(t, db.Model(&owner).Association("Albums").Append(&album))
+
+	media := models.Media{Title: "pic", Path: "/photos/private/pic", AlbumID: album.ID}
+	assert.NoError(t, db.Save(&media).Error)
+
+	owns, err := owner.OwnsMedia(db, &media)
+	assert.NoError(t, err)
+	assert.True(t, owns)
+
+	owns, err = other.OwnsMedia(db, &media)
+	assert.NoError(t, err)
+	assert.False(t, owns)
+}

@@ -69,6 +69,9 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 	}
 }
 
+// AddUserToContext stores the authenticated user. Album membership is not cached
+// here: websocket init keeps the returned context for the life of the connection,
+// and every later operation inherits it.
 func AddUserToContext(ctx context.Context, user *models.User) context.Context {
 	return context.WithValue(ctx, userCtxKey, user)
 }
@@ -122,7 +125,7 @@ func AuthWebsocketInit() func(context.Context, transport.InitPayload) (context.C
 		}
 
 		// put it in context
-		userCtx := context.WithValue(ctx, userCtxKey, user)
+		userCtx := AddUserToContext(ctx, user)
 
 		// and return it so the resolvers can see it
 		// Return nil for the InitPayload acknowledgment (no custom ack payload needed)
