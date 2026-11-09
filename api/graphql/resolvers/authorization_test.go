@@ -144,14 +144,13 @@ func TestMediaAlbumRequiresAlbumOwnership(t *testing.T) {
 	}
 }
 
-// Timeline requests album on up to 200 media items. Ownership is loaded once
-// per request rather than once per item, and a user still cannot read another
-// album.
+// Timeline requests album on up to 200 media items. One GraphQL operation loads
+// ownership once, and a user still cannot read another album.
 func TestMediaAlbumOwnershipIsLoadedOncePerRequest(t *testing.T) {
 	useStubFaceDetector(t)
 	f := setupTwoTenantFixtures(t)
 	resolver := &mediaResolver{f.resolver}
-	ctx := f.ctxFor(f.alice)
+	ctx := auth.WithAlbumAccessCache(f.ctxFor(f.alice))
 
 	var ownershipQueries int
 	const callbackName = "test:count-album-ownership"
@@ -186,6 +185,50 @@ func TestMediaAlbumOwnershipIsLoadedOncePerRequest(t *testing.T) {
 	assert.Empty(t, faces)
 
 	assert.Equal(t, 1, ownershipQueries)
+}
+
+// The websocket connection context is reused for every operation. Membership
+// cached on that context would keep granting access after the user loses the
+// album. Each operation gets its own cache, and the connection context itself
+// checks the database again.
+func TestAlbumMembershipChangeIsVisibleOnTheNextOperation(t *testing.T) {
+	useStubFaceDetector(t)
+	f := setupTwoTenantFixtures(t)
+	resolver := &mediaResolver{f.resolver}
+	connection := f.ctxFor(f.alice)
+
+	var ownershipQueries int
+	const callbackName = "test:count-album-ownership-ops"
+	_ = f.db.Callback().Query().Remove(callbackName)
+	require.NoError(t, f.db.Callback().Query().After("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		if strings.Contains(strings.ToLower(tx.Statement.SQL.String()), "user_albums") {
+			ownershipQueries++
+		}
+	}))
+	t.Cleanup(func() { _ = f.db.Callback().Query().Remove(callbackName) })
+
+	operation := auth.WithAlbumAccessCache(connection)
+	for _, media := range f.aliceMedia {
+		album, err := resolver.Album(operation, media)
+		require.NoError(t, err)
+		assert.Equal(t, media.AlbumID, album.ID)
+	}
+	assert.Equal(t, 1, ownershipQueries)
+
+	var album models.Album
+	require.NoError(t, f.db.First(&album, f.aliceMedia[0].AlbumID).Error)
+	require.NoError(t, f.db.Model(f.alice).Association("Albums").Delete(&album))
+	afterRemoval := ownershipQueries
+
+	nextOperation := auth.WithAlbumAccessCache(connection)
+	got, err := resolver.Album(nextOperation, f.aliceMedia[0])
+	assert.ErrorIs(t, err, auth.ErrUnauthorized)
+	assert.Nil(t, got)
+	assert.Equal(t, afterRemoval+1, ownershipQueries)
+
+	got, err = resolver.Album(connection, f.aliceMedia[0])
+	assert.ErrorIs(t, err, auth.ErrUnauthorized)
+	assert.Nil(t, got)
 }
 
 // Face groups carry the names users gave to the people in their photos, so the

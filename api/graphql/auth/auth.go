@@ -69,10 +69,10 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 	}
 }
 
+// AddUserToContext stores the authenticated user. Album membership is not cached
+// here: websocket init keeps the returned context for the life of the connection,
+// and every later operation inherits it.
 func AddUserToContext(ctx context.Context, user *models.User) context.Context {
-	if ctx.Value(albumAccessContextKey{}) == nil {
-		ctx = context.WithValue(ctx, albumAccessContextKey{}, &albumAccessCache{})
-	}
 	return context.WithValue(ctx, userCtxKey, user)
 }
 

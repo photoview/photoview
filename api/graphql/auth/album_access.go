@@ -9,8 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// albumAccessContextKey stores one album-membership cache for a request.
+// albumAccessContextKey stores album membership for one GraphQL operation.
 // Media.album, Media.faces and Media.shares otherwise ask once per media item.
+// The cache must not be attached to a websocket connection context.
 type albumAccessContextKey struct{}
 
 type albumAccessCache struct {
@@ -18,9 +19,16 @@ type albumAccessCache struct {
 	byUser map[int]map[int]struct{}
 }
 
+// WithAlbumAccessCache returns a child context with an empty membership cache.
+// GraphQL calls it once per operation. A new operation on the same connection
+// context gets a new cache, so a membership change is visible on the next operation.
+func WithAlbumAccessCache(ctx context.Context) context.Context {
+	return context.WithValue(ctx, albumAccessContextKey{}, &albumAccessCache{})
+}
+
 // UserOwnsMedia reports whether media is in an album the user owns, the same
-// rule as User.OwnsMedia. A context from AddUserToContext loads that user's
-// album IDs once and reuses them for the rest of the request.
+// rule as User.OwnsMedia. Inside one WithAlbumAccessCache context the album IDs
+// are loaded once. A context without that cache checks the database every time.
 func UserOwnsMedia(ctx context.Context, db *gorm.DB, user *models.User, media *models.Media) (bool, error) {
 	if cache, ok := ctx.Value(albumAccessContextKey{}).(*albumAccessCache); ok && cache != nil {
 		return cache.owns(db, user, media)

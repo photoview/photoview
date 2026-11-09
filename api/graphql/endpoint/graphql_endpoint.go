@@ -1,8 +1,10 @@
 package graphql_endpoint
 
 import (
+	"context"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -28,6 +30,11 @@ func GraphqlEndpoint(db *gorm.DB) *graphql_handler.Server {
 	}
 
 	graphqlServer := graphql_handler.New(photoview_graphql.NewExecutableSchema(graphqlConfig))
+	// A fresh membership cache per operation. The websocket connection context
+	// outlives any one operation, so the cache must not be stored there.
+	graphqlServer.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+		return next(auth.WithAlbumAccessCache(ctx))
+	})
 	graphqlServer.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
 		Implementation:        server.WebsocketImplementation(utils.DevelopmentMode()),
