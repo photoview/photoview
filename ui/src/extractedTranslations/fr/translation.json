@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Réinitialiser la photo de couverture",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Définir une photo de couverture d'Album",
       "title_placeholder": "Titre de l'Album"
     },

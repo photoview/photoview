@@ -9,6 +9,7 @@ import {
 } from './__generated__/getAlbumSidebar'
 import { SidebarAlbumCover } from './AlbumCovers'
 import SidebarAlbumDownload from './SidebarDownloadAlbum'
+import SidebarAlbumScan from './SidebarAlbumScan'
 
 const albumQuery = gql`
   query getAlbumSidebar($id: ID!) {
@@ -53,6 +54,12 @@ const AlbumSidebar = ({ albumId }: AlbumSidebarProps) => {
       </div>
       <div className="mt-8">
         <SidebarAlbumDownload albumID={albumId} />
+      </div>
+      <div className="mt-8">
+        {/* Remounts the mutation state on album change, so a scan still in
+            flight for the previous album can't leave this one's button
+            stuck disabled. */}
+        <SidebarAlbumScan key={albumId} id={albumId} />
       </div>
     </div>
   )

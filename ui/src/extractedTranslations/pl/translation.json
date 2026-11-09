@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "Zresetuj zdjęcie okładki",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "Ustaw jako zdjęcie okładki albumu",
       "title_placeholder": "Tytuł albumu"
     },
