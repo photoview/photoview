@@ -65,6 +65,30 @@
   "meta": {
     "description": "Проста та зручна фотогалерея для персональних серверів"
   },
+  "notification": {
+    "error": {
+      "graphql": {
+        "content": "",
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "logout_note": "",
+      "network": {
+        "content": "",
+        "header": ""
+      },
+      "server": {
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "session": {
+        "content": "",
+        "header": ""
+      }
+    }
+  },
   "people_page": {
     "action_label": {
       "change_label": "Змінити мітку",

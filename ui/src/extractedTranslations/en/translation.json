@@ -65,6 +65,30 @@
   "meta": {
     "description": "Simple and User-friendly Photo Gallery for Personal Servers"
   },
+  "notification": {
+    "error": {
+      "graphql": {
+        "content": "Server error: {{message}} at ({{path}})",
+        "header": "Something went wrong",
+        "multiple_content": "Received {{errorCount}} errors from the server. See the console for more information",
+        "multiple_header": "Multiple things went wrong"
+      },
+      "logout_note": "You are being logged out in an attempt to recover.",
+      "network": {
+        "content": "Could not reach the server.",
+        "header": "Network error"
+      },
+      "server": {
+        "header": "Server error",
+        "multiple_content": "Received {{errorCount}} errors from the server.",
+        "multiple_header": "Multiple server errors"
+      },
+      "session": {
+        "content": "The server no longer accepts this session.",
+        "header": "Session ended"
+      }
+    }
+  },
   "people_page": {
     "action_label": {
       "change_label": "Change label",
