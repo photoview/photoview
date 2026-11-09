@@ -1,5 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import urlJoin from 'url-join'
 import { API_ENDPOINT } from '../../apolloClient'
 import { SidebarSection, SidebarSectionTitle } from './SidebarComponents'
 import SidebarTable from './SidebarTable'
@@ -63,7 +64,12 @@ const SidebarAlbumDownload = ({ albumID }: SidebarAlbumDownladProps) => {
             aria-label={downloadLabel}
             title={downloadLabel}
             onClick={() =>
-              (location.href = `${API_ENDPOINT}/download/album/${albumID}/${x.purpose}`)
+              (location.href = urlJoin(
+                API_ENDPOINT,
+                'download/album',
+                albumID,
+                x.purpose
+              ))
             }
           >
             {x.title}
