@@ -102,12 +102,17 @@ type EncodeMediaData struct {
 	_videoMetadata  *ffprobe.ProbeData
 }
 
-func NewEncodeMediaData(media *models.Media) EncodeMediaData {
-	fileType := media_type.GetMediaType(media.Path)
-
+// NewEncodeMediaData creates the encode data for a single media.
+//
+// contentType is the media type already determined by the caller, typically from
+// the album scanner cache which resolved it while discovering the media. Passing
+// it in avoids a second lookup of the same path: media type resolution shells out
+// to `exiftool`, which is serialized process-wide by a single mutex.
+// Pass media_type.TypeUnknown to have ContentType resolve it lazily instead.
+func NewEncodeMediaData(media *models.Media, contentType media_type.MediaType) EncodeMediaData {
 	return EncodeMediaData{
 		Media:        media,
-		_contentType: fileType,
+		_contentType: contentType,
 	}
 }
 
