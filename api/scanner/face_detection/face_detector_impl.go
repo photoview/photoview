@@ -132,15 +132,21 @@ func (fd *faceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
 }
 
 func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
-	fd.mutex.Lock()
-	defer fd.mutex.Unlock()
-
-	match := fd.classifyDescriptor(face.Descriptor)
-
+	// Getting the dimensions is an ImageMagick call which does not touch the
+	// recognizer, so it is done before taking the lock. The critical section
+	// below deliberately stays atomic: matching a face against the known
+	// samples, persisting its group and feeding the new sample back into the
+	// recognizer must not interleave between workers, otherwise two workers can
+	// each create a separate face group for the same person.
 	dimension, err := media_encoding.GetPhotoDimensions(imagePath)
 	if err != nil {
 		return err
 	}
+
+	fd.mutex.Lock()
+	defer fd.mutex.Unlock()
+
+	match := fd.classifyDescriptor(face.Descriptor)
 
 	imageFace := models.ImageFace{
 		MediaID:    media.ID,
