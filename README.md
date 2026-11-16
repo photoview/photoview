@@ -39,15 +39,7 @@ for the next release (PostgreSQL 17 remains supported). If you follow `master`, 
 
 Don't forget to back up your database before upgrading.
 
-## Demo site
-
-Visit [https://photos.qpqp.dk/](https://photos.qpqp.dk/)
-
-Username: **demo**
-
-Password: **demo**
-
-### Community-hosted demo site
+## Community-hosted demo site
 
 > [!WARNING]
 > This demo site is hosted and controlled by a community member, not by the Photoview maintainers.
@@ -68,8 +60,7 @@ Its deployment and nightly reset are public: [simon-vasconcelos-lee/photoview-de
 
 - [ATTENTION to Docker users !!!](#attention-to-docker-users-)
 - [ATTENTION to PostgreSQL users !!!](#attention-to-postgresql-users-)
-  - [Demo site](#demo-site)
-    - [Community-hosted demo site](#community-hosted-demo-site)
+  - [Community-hosted demo site](#community-hosted-demo-site)
   - [Contents](#contents)
   - [Main features](#main-features)
   - [Supported platforms](#supported-platforms)
