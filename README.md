@@ -62,6 +62,8 @@ Password: **demo1234**
 
 It runs the latest `master` image and is reset every night at 03:00 UTC.
 
+Its deployment and nightly reset are public: [simon-vasconcelos-lee/photoview-demo](https://github.com/simon-vasconcelos-lee/photoview-demo).
+
 ## Contents
 
 - [ATTENTION to Docker users !!!](#attention-to-docker-users-)
