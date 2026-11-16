@@ -1,9 +1,11 @@
 package resolvers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"gorm.io/gorm"
 )
@@ -15,7 +17,7 @@ const imageFacesIDInQuestion = "image_faces.id IN (?)"
 
 var ErrFaceDetectorNotInitialized = errors.New("face detector not initialized")
 
-func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
+func userOwnedFaceGroup(ctx context.Context, db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
 	if user.Admin {
 		var faceGroup models.FaceGroup
 		if err := db.Where("id = ?", faceGroupID).Take(&faceGroup).Error; err != nil {
@@ -28,13 +30,15 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 		return &faceGroup, nil
 	}
 
-	if err := user.FillAlbums(db); err != nil {
+	// Membership is loaded for this operation. User.Albums is left alone: a
+	// websocket connection reuses the user value, and FillAlbums keeps a
+	// non-empty slice after access is revoked.
+	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
+	if err != nil {
 		return nil, err
 	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
+	if len(userAlbumIDs) == 0 {
+		return nil, fmt.Errorf("face group does not exist or is not owned by the user: %w", gorm.ErrRecordNotFound)
 	}
 
 	// Verify that user owns at least one of the images in the face group
@@ -66,16 +70,12 @@ func userOwnedFaceGroup(db *gorm.DB, user *models.User, faceGroupID int) (*model
 // however many albums the user owns. SQLite's default variable limit is 32766.
 const imageFaceLookupBatchSize = 1000
 
+// getUserOwnedImageFaces returns the requested faces the caller may use.
+// Administrators receive every requested face, the same exception as move,
+// detach, and recognition results. Regular users only receive faces in albums
+// they own.
 func getUserOwnedImageFaces(tx *gorm.DB, user *models.User, imageFaceIDs []int) ([]*models.ImageFace, error) {
-	// Move and detach keep the existing administrator exception.
 	return lookupImageFaces(tx, user, imageFaceIDs, !user.Admin)
-}
-
-// imageFacesInUserAlbums filters recognition results to albums the caller owns.
-// Administrators are not exempt: ImageFace.media does not repeat the media query's
-// membership check.
-func imageFacesInUserAlbums(tx *gorm.DB, user *models.User, imageFaceIDs []int) ([]*models.ImageFace, error) {
-	return lookupImageFaces(tx, user, imageFaceIDs, true)
 }
 
 func lookupImageFaces(tx *gorm.DB, user *models.User, imageFaceIDs []int, restrictToUserAlbums bool) ([]*models.ImageFace, error) {

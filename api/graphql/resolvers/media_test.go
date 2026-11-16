@@ -234,6 +234,16 @@ func TestFavoriteMediaRejectsForeignMedia(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, media)
 	assert.Equal(t, fixtures.media.ID, media.ID)
+
+	// An administrator with no user_albums row can favorite the same media.
+	password := "1234"
+	admin, err := models.RegisterUser(db, "admin", &password, true)
+	require.NoError(t, err)
+	adminCtx := auth.AddUserToContext(context.Background(), admin)
+	media, err = mutation.FavoriteMedia(adminCtx, fixtures.media.ID, true)
+	require.NoError(t, err)
+	require.NotNil(t, media)
+	assert.Equal(t, fixtures.media.ID, media.ID)
 }
 
 // album { media { album } } and a media share that requests Media.album are both

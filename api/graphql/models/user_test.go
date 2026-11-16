@@ -256,6 +256,20 @@ func TestUserFavoriteMediaRequiresAlbumOwnership(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, favourite)
 
+	// An administrator has no user_albums row and can still favorite the media.
+	admin, err := models.RegisterUser(db, "admin", nil, true)
+	assert.NoError(t, err)
+	favMedia, err = admin.FavoriteMedia(db, media.ID, true)
+	assert.NoError(t, err)
+	assert.NotNil(t, favMedia)
+
+	favourite, err = dataloader.NewUserFavoriteLoader(db).Load(&models.UserMediaData{
+		UserID:  admin.ID,
+		MediaID: media.ID,
+	})
+	assert.NoError(t, err)
+	assert.True(t, favourite)
+
 	favMedia, err = owner.FavoriteMedia(db, media.ID, true)
 	assert.NoError(t, err)
 	assert.NotNil(t, favMedia)

@@ -48,19 +48,23 @@ func (r *mediaResolver) Album(ctx context.Context, obj *models.Media) (*models.A
 
 	// A media share token and an album share token only grant the shared item.
 	// Media.album exposes the album's other media and sub albums, so it is
-	// limited to users that own the media's album. The field is non-null, and a
-	// share client that requests it receives an authorization error.
+	// limited to administrators and to users that own the media's album.
+	// Administrators have no user_albums row for another user's album and still
+	// need the field. The field is non-null, and a share client that requests
+	// it receives an authorization error.
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return nil, auth.ErrUnauthorized
 	}
 
-	ownsMedia, err := auth.UserOwnsMedia(ctx, db, user, obj)
-	if err != nil {
-		return nil, err
-	}
-	if !ownsMedia {
-		return nil, auth.ErrUnauthorized
+	if !user.Admin {
+		ownsMedia, err := auth.UserOwnsMedia(ctx, db, user, obj)
+		if err != nil {
+			return nil, err
+		}
+		if !ownsMedia {
+			return nil, auth.ErrUnauthorized
+		}
 	}
 
 	var album models.Album
@@ -150,17 +154,21 @@ func (r *mediaResolver) Faces(ctx context.Context, obj *models.Media) ([]*models
 
 	// Face groups carry the labels set by the album owners, which must not be
 	// disclosed to share token holders or to users of other albums.
+	// Administrators see every face, including media they have no user_albums
+	// row for.
 	user := auth.UserFromContext(ctx)
 	if user == nil {
 		return []*models.ImageFace{}, nil
 	}
 
-	ownsMedia, err := auth.UserOwnsMedia(ctx, r.DB(ctx), user, obj)
-	if err != nil {
-		return nil, err
-	}
-	if !ownsMedia {
-		return []*models.ImageFace{}, nil
+	if !user.Admin {
+		ownsMedia, err := auth.UserOwnsMedia(ctx, r.DB(ctx), user, obj)
+		if err != nil {
+			return nil, err
+		}
+		if !ownsMedia {
+			return []*models.ImageFace{}, nil
+		}
 	}
 
 	if obj.Faces != nil {

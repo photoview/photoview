@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,23 +22,23 @@ func TestUserOwnedFaceGroupRequiresOwnedImage(t *testing.T) {
 	f.addFace(t, f.aliceMedia[0], own)
 	f.addFace(t, f.bobMedia[0], foreign)
 
-	got, err := userOwnedFaceGroup(f.db, f.alice, own.ID)
+	got, err := userOwnedFaceGroup(f.ctxFor(f.alice), f.db, f.alice, own.ID)
 	require.NoError(t, err)
 	assert.Equal(t, own.ID, got.ID)
 
-	got, err = userOwnedFaceGroup(f.db, f.alice, foreign.ID)
+	got, err = userOwnedFaceGroup(f.ctxFor(f.alice), f.db, f.alice, foreign.ID)
 	assert.Error(t, err)
 	assert.Nil(t, got)
 
-	got, err = userOwnedFaceGroup(f.db, f.alice, foreign.ID+100)
+	got, err = userOwnedFaceGroup(f.ctxFor(f.alice), f.db, f.alice, foreign.ID+100)
 	assert.Error(t, err)
 	assert.Nil(t, got)
 
-	got, err = userOwnedFaceGroup(f.db, admin, foreign.ID)
+	got, err = userOwnedFaceGroup(f.ctxFor(admin), f.db, admin, foreign.ID)
 	require.NoError(t, err)
 	assert.Equal(t, foreign.ID, got.ID)
 
-	got, err = userOwnedFaceGroup(f.db, admin, foreign.ID+100)
+	got, err = userOwnedFaceGroup(f.ctxFor(admin), f.db, admin, foreign.ID+100)
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
@@ -225,18 +226,16 @@ func TestGetUserOwnedImageFacesBoundsAlbumParameters(t *testing.T) {
 	assert.Equal(t, []int{imageFaceLookupBatchSize + 1, 2}, boundCounts)
 }
 
-// recognizeUnlabeledFaces exposes each face's media. Administrators follow the
-// same album rule as the media query, without changing move or detach.
-func TestRecognizeUnlabeledFacesLimitsAdministratorsToOwnAlbums(t *testing.T) {
+// recognizeUnlabeledFaces exposes each face's media. Administrators see the
+// full result without a user_albums row. A regular user still only sees faces
+// in albums they own. Move and detach keep the same administrator exception.
+func TestRecognizeUnlabeledFacesAllowsAdministratorWithoutAlbumMembership(t *testing.T) {
 	detector := useStubFaceDetector(t)
 	f := setupTwoTenantFixtures(t)
 
 	password := "1234"
 	admin, err := models.RegisterUser(f.db, "admin", &password, true)
 	require.NoError(t, err)
-	var ownedAlbum models.Album
-	require.NoError(t, f.db.First(&ownedAlbum, f.aliceMedia[0].AlbumID).Error)
-	require.NoError(t, f.db.Model(admin).Association("Albums").Append(&ownedAlbum))
 
 	group := f.addFaceGroup(t, nil)
 	aliceFace := f.addFace(t, f.aliceMedia[0], group)
@@ -245,17 +244,112 @@ func TestRecognizeUnlabeledFacesLimitsAdministratorsToOwnAlbums(t *testing.T) {
 
 	faces, err := (&mutationResolver{f.resolver}).RecognizeUnlabeledFaces(f.ctxFor(admin))
 	require.NoError(t, err)
-	require.Len(t, faces, 1)
-	assert.Equal(t, aliceFace.ID, faces[0].ID)
+	ids := make([]int, len(faces))
+	for i, face := range faces {
+		ids[i] = face.ID
+	}
+	assert.Equal(t, []int{aliceFace.ID, bobFace.ID}, ids)
 
-	outsider, err := models.RegisterUser(f.db, "admin-outsider", &password, true)
+	faces, err = (&mutationResolver{f.resolver}).RecognizeUnlabeledFaces(f.ctxFor(f.bob))
 	require.NoError(t, err)
-	faces, err = (&mutationResolver{f.resolver}).RecognizeUnlabeledFaces(f.ctxFor(outsider))
-	require.NoError(t, err)
-	assert.Empty(t, faces)
+	ids = make([]int, len(faces))
+	for i, face := range faces {
+		ids[i] = face.ID
+	}
+	assert.Equal(t, []int{bobFace.ID}, ids)
 
-	// The helper used by move and detach still returns every requested face to an administrator.
-	owned, err := getUserOwnedImageFaces(f.db, outsider, []int{aliceFace.ID, bobFace.ID})
+	owned, err := getUserOwnedImageFaces(f.db, admin, []int{aliceFace.ID, bobFace.ID})
 	require.NoError(t, err)
 	assert.Len(t, owned, 2)
+}
+
+// A websocket connection keeps one user value. FillAlbums leaves User.Albums
+// populated, so a later operation on that connection used to authorize face
+// groups after the album row was removed. Each operation loads membership again.
+func TestFaceGroupPathsRefreshMembershipAfterRevocation(t *testing.T) {
+	useStubFaceDetector(t)
+	f := setupTwoTenantFixtures(t)
+
+	group := f.addFaceGroup(t, nil)
+	face := f.addFace(t, f.aliceMedia[0], group)
+
+	connection := f.ctxFor(f.alice)
+	require.NoError(t, f.alice.FillAlbums(f.db))
+	require.NotEmpty(t, f.alice.Albums)
+
+	var membershipQueries int
+	const callbackName = "test:face-group-membership"
+	_ = f.db.Callback().Query().Remove(callbackName)
+	require.NoError(t, f.db.Callback().Query().After("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		if strings.Contains(strings.ToLower(tx.Statement.SQL.String()), "user_albums") {
+			membershipQueries++
+		}
+	}))
+	t.Cleanup(func() { _ = f.db.Callback().Query().Remove(callbackName) })
+
+	first := auth.WithAlbumAccessCache(connection)
+	owned, err := userOwnedFaceGroup(first, f.db, f.alice, group.ID)
+	require.NoError(t, err)
+	assert.Equal(t, group.ID, owned.ID)
+
+	imageFaces, err := (&faceGroupResolver{f.resolver}).ImageFaces(first, group, nil)
+	require.NoError(t, err)
+	require.Len(t, imageFaces, 1)
+	assert.Equal(t, face.ID, imageFaces[0].ID)
+
+	count, err := (&faceGroupResolver{f.resolver}).ImageFaceCount(first, group)
+	require.NoError(t, err)
+	assert.Equal(t, 1, count)
+
+	groups, err := (&queryResolver{f.resolver}).MyFaceGroups(first, nil)
+	require.NoError(t, err)
+	require.Len(t, groups, 1)
+	assert.Equal(t, group.ID, groups[0].ID)
+
+	gotGroup, err := (&queryResolver{f.resolver}).FaceGroup(first, group.ID)
+	require.NoError(t, err)
+	require.NotNil(t, gotGroup)
+	assert.Equal(t, group.ID, gotGroup.ID)
+	assert.Equal(t, 1, membershipQueries)
+
+	// Delete the membership row directly. Association().Delete would also drop
+	// the album from the in-memory slice, which hides the stale-list bug.
+	require.NoError(t, f.db.Exec("DELETE FROM user_albums WHERE user_id = ?", f.alice.ID).Error)
+	require.NotEmpty(t, f.alice.Albums, "the connection still holds the album list from before revocation")
+	afterRemoval := membershipQueries
+
+	next := auth.WithAlbumAccessCache(connection)
+	owned, err = userOwnedFaceGroup(next, f.db, f.alice, group.ID)
+	assert.Error(t, err)
+	assert.Nil(t, owned)
+
+	imageFaces, err = (&faceGroupResolver{f.resolver}).ImageFaces(next, group, nil)
+	require.NoError(t, err)
+	assert.Empty(t, imageFaces)
+
+	count, err = (&faceGroupResolver{f.resolver}).ImageFaceCount(next, group)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count)
+
+	groups, err = (&queryResolver{f.resolver}).MyFaceGroups(next, nil)
+	require.NoError(t, err)
+	assert.Empty(t, groups)
+
+	gotGroup, err = (&queryResolver{f.resolver}).FaceGroup(next, group.ID)
+	require.NoError(t, err)
+	require.NotNil(t, gotGroup)
+	assert.NotEqual(t, group.ID, gotGroup.ID)
+
+	label := "revoked"
+	_, err = (&mutationResolver{f.resolver}).SetFaceGroupLabel(next, group.ID, &label)
+	assert.Error(t, err)
+
+	var reloaded models.FaceGroup
+	require.NoError(t, f.db.First(&reloaded, group.ID).Error)
+	assert.Nil(t, reloaded.Label)
+	assert.Equal(t, afterRemoval+1, membershipQueries)
+
+	// A regular second user still cannot label the group.
+	_, err = (&mutationResolver{f.resolver}).SetFaceGroupLabel(f.ctxFor(f.bob), group.ID, &label)
+	assert.Error(t, err)
 }

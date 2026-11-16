@@ -117,6 +117,10 @@ func TestMediaAlbumRequiresAlbumOwnership(t *testing.T) {
 	resolver := &mediaResolver{f.resolver}
 	shared := f.aliceMedia[0]
 
+	password := "1234"
+	admin, err := models.RegisterUser(f.db, "admin", &password, true)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name    string
 		user    *models.User
@@ -125,6 +129,7 @@ func TestMediaAlbumRequiresAlbumOwnership(t *testing.T) {
 		{"anonymous share token holder", nil, false},
 		{"user owning another album", f.bob, false},
 		{"album owner", f.alice, true},
+		{"administrator without album membership", admin, true},
 	}
 
 	for _, tt := range tests {
@@ -242,6 +247,10 @@ func TestMediaFacesOnlyVisibleToAlbumOwner(t *testing.T) {
 	group := f.addFaceGroup(t, &label)
 	f.addFace(t, f.aliceMedia[0], group)
 
+	password := "1234"
+	admin, err := models.RegisterUser(f.db, "admin", &password, true)
+	require.NoError(t, err)
+
 	for _, tt := range []struct {
 		name string
 		user *models.User
@@ -250,6 +259,7 @@ func TestMediaFacesOnlyVisibleToAlbumOwner(t *testing.T) {
 		{"anonymous share token holder", nil, 0},
 		{"user owning another album", f.bob, 0},
 		{"album owner", f.alice, 1},
+		{"administrator without album membership", admin, 1},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			faces, err := resolver.Faces(f.ctxFor(tt.user), f.aliceMedia[0])

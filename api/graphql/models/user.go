@@ -195,15 +195,19 @@ func (user *User) OwnsMedia(db *gorm.DB, media *Media) (bool, error) {
 	return count > 0, nil
 }
 
-// FavoriteMedia sets/clears a media as favorite for the user.
-// The media must belong to an album the user owns, the same rule as the `media` query.
+// FavoriteMedia sets or clears a media item as a favorite.
+// Administrators may favorite any media. Other users must own its album, the
+// same rule as the media query.
 func (user *User) FavoriteMedia(db *gorm.DB, mediaID int, favorite bool) (*Media, error) {
 	var media Media
-	err := db.
-		Where("media.id = ?", mediaID).
-		Where("EXISTS (SELECT 1 FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)",
-			user.ID).
-		First(&media).Error
+	query := db.Where("media.id = ?", mediaID)
+	if !user.Admin {
+		query = query.Where(
+			"EXISTS (SELECT 1 FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)",
+			user.ID,
+		)
+	}
+	err := query.First(&media).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("media not found")
