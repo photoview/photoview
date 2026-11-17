@@ -73,4 +73,32 @@ describe('Login page', () => {
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Sign in')).toBeInTheDocument()
   })
+
+  test('offers SSO alongside password login when OIDC is enabled', async () => {
+    authToken.mockImplementation(() => null)
+    const previousFetch = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ enabled: true }),
+      })
+    )
+
+    try {
+      const history = createMemoryHistory({ initialEntries: ['/login'] })
+      render(
+        <MockedProvider mocks={[mockInitialSetupGraphql(false)]}>
+          <HistoryRouter history={history}>
+            <LoginPage />
+          </HistoryRouter>
+        </MockedProvider>
+      )
+
+      expect(await screen.findByText('Sign in with SSO')).toBeInTheDocument()
+      expect(screen.getByLabelText('Password')).toBeInTheDocument()
+    } finally {
+      vi.stubGlobal('fetch', previousFetch)
+    }
+  })
 })

@@ -40,6 +40,23 @@ type AccessToken struct {
 	Expire time.Time `gorm:"not null;index"`
 }
 
+// OIDCLoginState is a short-lived, single-use authorization request. Keeping it
+// in the database allows the callback to land on any Photoview replica.
+type OIDCLoginState struct {
+	Model
+	StateHash    string    `gorm:"not null;uniqueIndex;size:64"`
+	CodeVerifier string    `gorm:"not null;size:128"`
+	Nonce        string    `gorm:"not null;size:64"`
+	ExpiresAt    time.Time `gorm:"not null;index"`
+}
+
+// OIDCLoginGate serializes login-start admission across Photoview replicas.
+type OIDCLoginGate struct {
+	ID          uint      `gorm:"primaryKey"`
+	WindowStart time.Time `gorm:"not null"`
+	Starts      uint      `gorm:"not null"`
+}
+
 type UserPreferences struct {
 	Model
 	UserID   int  `gorm:"not null;index"`

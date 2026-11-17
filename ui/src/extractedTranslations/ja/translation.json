@@ -60,6 +60,10 @@
       },
       "title": "初期設定"
     },
+    "oidc_failed": "",
+    "oidc_invalid_state": "",
+    "oidc_not_linked": "",
+    "oidc_sign_in": "",
     "welcome": "Photoview へようこそ"
   },
   "meta": {

@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { useForm } from 'react-hook-form'
 import { INITIAL_SETUP_QUERY, login } from './loginUtilities'
 import { authToken } from '../../helpers/authentication'
+import { API_ENDPOINT } from '../../apolloClient'
+import urlJoin from 'url-join'
 
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet'
@@ -121,6 +123,43 @@ type LoginInputs = {
 const LoginPage = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [oidcEnabled, setOidcEnabled] = useState(false)
+  const oidcError = new URLSearchParams(window.location.search).get(
+    'oidc_error'
+  )
+  const oidcErrorMessage = oidcError
+    ? oidcError === 'invalid_state'
+      ? t(
+          'login_page.oidc_invalid_state',
+          'Your SSO sign-in expired. Please try again.'
+        )
+      : oidcError === 'not_linked'
+      ? t(
+          'login_page.oidc_not_linked',
+          'This SSO account is not linked to a Photoview user.'
+        )
+      : t(
+          'login_page.oidc_failed',
+          'SSO sign-in failed. Please try again or use your password.'
+        )
+    : null
+
+  useEffect(() => {
+    if (typeof fetch !== 'function') return
+    fetch(urlJoin(API_ENDPOINT, '/auth/oidc/status'), {
+      credentials: 'include',
+    })
+      .then(response => (response.ok ? response.json() : null))
+      .then((status: unknown) =>
+        setOidcEnabled(
+          typeof status === 'object' &&
+            status !== null &&
+            'enabled' in status &&
+            status.enabled === true
+        )
+      )
+      .catch(() => setOidcEnabled(false))
+  }, [])
 
   const { data: initialSetupData } = useQuery<CheckInitialSetup>(
     INITIAL_SETUP_QUERY,
@@ -146,7 +185,24 @@ const LoginPage = () => {
       </Helmet>
       <div>
         <LogoHeader />
+        <div className="mx-auto max-w-[500px]">
+          <MessageBox
+            message={oidcErrorMessage}
+            show={!!oidcErrorMessage}
+            type="negative"
+          />
+        </div>
         <LoginForm />
+        {oidcEnabled && (
+          <div className="mx-auto max-w-[500px] mt-6">
+            <a
+              href={urlJoin(API_ENDPOINT, '/auth/oidc/start')}
+              className="inline-block rounded-md px-8 py-2 border border-gray-300 font-semibold"
+            >
+              {t('login_page.oidc_sign_in', 'Sign in with SSO')}
+            </a>
+          </div>
+        )}
       </div>
     </>
   )

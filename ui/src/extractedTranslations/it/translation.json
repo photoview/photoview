@@ -60,6 +60,10 @@
       },
       "title": "Setup iniziale"
     },
+    "oidc_failed": "",
+    "oidc_invalid_state": "",
+    "oidc_not_linked": "",
+    "oidc_sign_in": "",
     "welcome": "Benvenuti su Photoview"
   },
   "meta": {

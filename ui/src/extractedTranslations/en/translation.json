@@ -60,6 +60,10 @@
       },
       "title": "Initial Setup"
     },
+    "oidc_failed": "SSO sign-in failed. Please try again or use your password.",
+    "oidc_invalid_state": "Your SSO sign-in expired. Please try again.",
+    "oidc_not_linked": "This SSO account is not linked to a Photoview user.",
+    "oidc_sign_in": "Sign in with SSO",
     "welcome": "Welcome to Photoview"
   },
   "meta": {

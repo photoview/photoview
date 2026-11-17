@@ -60,6 +60,10 @@
       },
       "title": "Configuration initiale"
     },
+    "oidc_failed": "",
+    "oidc_invalid_state": "",
+    "oidc_not_linked": "",
+    "oidc_sign_in": "",
     "welcome": "Bienvenue sur Photoview"
   },
   "meta": {

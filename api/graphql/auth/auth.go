@@ -5,11 +5,13 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/photoview/photoview/api/dataloader"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
+	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +33,13 @@ type contextKey struct {
 func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// The OIDC callback must remain reachable when an old local session
+			// cookie has expired. These endpoints do not use the current user.
+			oidcPath := strings.TrimRight(utils.ApiListenUrl().Path, "/") + "/auth/oidc/"
+			if r.URL.Path == oidcPath+"start" || r.URL.Path == oidcPath+"callback" || r.URL.Path == oidcPath+"status" {
+				next.ServeHTTP(w, r)
+				return
+			}
 
 			if tokenCookie, err := r.Cookie("auth-token"); err == nil {
 				loaders := dataloader.For(r.Context())

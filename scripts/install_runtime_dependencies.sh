@@ -20,6 +20,9 @@ LIBS=(
   # health check
   curl
 
+  # HTTPS provider discovery and token exchange for OIDC login
+  ca-certificates
+
   # exiftool
   libimage-exiftool-perl
 
