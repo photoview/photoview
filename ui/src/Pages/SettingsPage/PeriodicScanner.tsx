@@ -223,6 +223,9 @@ const PeriodicScanner = () => {
                 unit: x.unit,
               }))
             }}
+            onBlur={() => {
+              onScanIntervalUpdate(scanInterval)
+            }}
             action={() => {
               onScanIntervalUpdate(scanInterval)
             }}
