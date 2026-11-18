@@ -70,6 +70,11 @@ const HoverIcon = styled.button`
   }
 
   transition: opacity 100ms, background-color 100ms;
+
+  @media (max-width: 1000px) {
+    /* Always show icons on mobile/touch devices */
+    opacity: 0.5;
+  }
 `
 
 type FavoriteIconProps = {
