@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { useLazyQuery, gql } from '@apollo/client'
+import { useLazyQuery, useQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
@@ -10,11 +10,13 @@ import {
   searchQuery_search_albums,
   searchQuery_search_media,
 } from './__generated__/searchQuery'
+import { searchbarUserPreferences } from './__generated__/searchbarUserPreferences'
+import { authToken } from '../../helpers/authentication'
 import classNames from 'classnames'
 
-const SEARCH_QUERY = gql`
-  query searchQuery($query: String!) {
-    search(query: $query) {
+export const SEARCH_QUERY = gql`
+  query searchQuery($query: String!, $limitMedia: Int, $limitAlbums: Int) {
+    search(query: $query, limitMedia: $limitMedia, limitAlbums: $limitAlbums) {
       query
       albums {
         id
@@ -39,13 +41,53 @@ const SEARCH_QUERY = gql`
   }
 `
 
+export const SEARCHBAR_USER_PREFERENCES_QUERY = gql`
+  query searchbarUserPreferences {
+    myUserPreferences {
+      id
+      searchResultLimit
+    }
+  }
+`
+
+// Above this many rows the dropdown drops the thumbnails and renders compact
+// text rows instead: at that length the 56px image rows are what makes the
+// list unusable, and the highlighted name is the information that matters.
+const DROPDOWN_COMPACT_THRESHOLD = 50
+
+// A backstop for an unlimited (0) preference, so searching for something
+// like "IMG" can't put thousands of rows in the DOM. "View all results"
+// leads to the complete list.
+const DROPDOWN_MAX_ROWS = 500
+
+// What the dropdown asks the server for. Rows beyond DROPDOWN_MAX_ROWS are
+// thrown away on arrival, so fetching them only costs a bigger response on
+// every keystroke - and an unlimited preference would otherwise transfer the
+// whole library each time.
+// Zero means unlimited, and anything below it could only have been stored by
+// bypassing the settings field - the search layer would read either as
+// "no limit", so both get the cap rather than the whole library.
+const dropdownRequestLimit = (preference: number | undefined) =>
+  preference === undefined || preference <= 0
+    ? DROPDOWN_MAX_ROWS
+    : Math.min(preference, DROPDOWN_MAX_ROWS)
+
 const SearchWrapper = styled.div.attrs({
   className: 'w-full max-w-xs lg:relative',
 })``
 
 const SearchBar = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
+  const { data: userPrefsData } = useQuery<searchbarUserPreferences>(
+    SEARCHBAR_USER_PREFERENCES_QUERY,
+    { skip: !authToken() }
+  )
+  const searchResultLimit =
+    userPrefsData?.myUserPreferences.searchResultLimit ?? undefined
+  const searchResultLimitRef = useRef(searchResultLimit)
+
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -56,7 +98,13 @@ const SearchBar = () => {
   const debouncedFetch = useRef<null | DebouncedFn<QueryFn>>(null)
   useEffect(() => {
     debouncedFetch.current = debounce<QueryFn>(query => {
-      fetchSearches({ variables: { query } })
+      fetchSearches({
+        variables: {
+          query,
+          limitMedia: dropdownRequestLimit(searchResultLimitRef.current),
+          limitAlbums: dropdownRequestLimit(searchResultLimitRef.current),
+        },
+      })
       setFetched(true)
       setExpanded(true)
     }, 250)
@@ -65,6 +113,26 @@ const SearchBar = () => {
       debouncedFetch.current?.cancel()
     }
   }, [])
+
+  useEffect(() => {
+    const limitChanged = searchResultLimitRef.current !== searchResultLimit
+    searchResultLimitRef.current = searchResultLimit
+
+    // The preference can still be in flight when the first search fires
+    // (debounced 250ms after typing), and it can be changed in the settings
+    // while this searchbar stays mounted. Updating the ref alone wouldn't
+    // rerun the search, leaving it stuck on the value it was issued with -
+    // a saved "unlimited" would silently keep showing ten results.
+    if (limitChanged && fetched && query.trim() !== '') {
+      fetchSearches({
+        variables: {
+          query: query.trim(),
+          limitMedia: dropdownRequestLimit(searchResultLimit),
+          limitAlbums: dropdownRequestLimit(searchResultLimit),
+        },
+      })
+    }
+  }, [searchResultLimit, fetched, query, fetchSearches])
 
   const fetchEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist()
@@ -77,20 +145,29 @@ const SearchBar = () => {
     }
   }
 
-  const location = useLocation()
-  useEffect(() => {
-    setExpanded(false)
-    setQuery('')
-  }, [location])
-
   const [selectedItem, setSelectedItem] = useState<number | null>(null)
 
-  const searchData = fetchResult.data
-  let media = searchData?.search.media || []
-  let albums = searchData?.search.albums || []
+  const location = useLocation()
+  useEffect(() => {
+    // Collapse on navigation but keep the typed query, so it's still there
+    // after following a result and coming back. The selection has to go
+    // though: the collapsed dropdown keeps its keydown listeners mounted,
+    // and a selected row would swallow the next Enter.
+    setExpanded(false)
+    setSelectedItem(null)
+  }, [location])
 
-  albums = albums.slice(0, 5)
-  media = media.slice(0, 5)
+  const searchData = fetchResult.data
+  // The server already applies the user's own limit; this only bounds what
+  // the dropdown itself renders when that limit is "unlimited". Albums win
+  // the remaining room, since a folder search is the case where the extra
+  // rows are worth having.
+  const albums = (searchData?.search.albums || []).slice(0, DROPDOWN_MAX_ROWS)
+  const media = (searchData?.search.media || []).slice(
+    0,
+    Math.max(0, DROPDOWN_MAX_ROWS - albums.length)
+  )
+  const compact = albums.length + media.length >= DROPDOWN_COMPACT_THRESHOLD
 
   const selectedItemId =
     selectedItem !== null
@@ -107,6 +184,10 @@ const SearchBar = () => {
 
     const blurEvent = () => {
       setExpanded(false)
+      // The rows keep their document keydown listeners while collapsed, so a
+      // selection left behind here would let Enter open that hidden result
+      // instead of doing whatever the focused element does.
+      setSelectedItem(null)
     }
 
     elem.addEventListener('focus', focusEvent)
@@ -137,6 +218,15 @@ const SearchBar = () => {
       } else if (event.key == 'Escape') {
         // setExpanded(false)
         inputEl.current?.blur()
+        // Not selectedItem: arrowing down an empty result list still sets it
+        // to 0, and that index resolves to no row at all - which would leave
+        // Enter doing nothing instead of opening the full result page.
+      } else if (event.key == 'Enter' && selectedItemId == null) {
+        const trimmed = query.trim()
+        if (trimmed !== '') {
+          navigate(`/search?q=${encodeURIComponent(trimmed)}`)
+          inputEl.current?.blur()
+        }
       }
     }
 
@@ -145,7 +235,7 @@ const SearchBar = () => {
     return () => {
       document.removeEventListener('keydown', keydownEvent)
     }
-  }, [searchData])
+  }, [searchData, selectedItemId, query, navigate, expanded])
 
   let results = null
   if (query.trim().length > 0 && fetched) {
@@ -158,6 +248,7 @@ const SearchBar = () => {
         setSelectedItem={setSelectedItem}
         loading={fetchResult.loading}
         expanded={expanded}
+        compact={compact}
       />
     )
   }
@@ -198,6 +289,7 @@ type SearchResultsProps = {
   setSelectedItem: React.Dispatch<React.SetStateAction<number | null>>
   query: string
   expanded: boolean
+  compact: boolean
 }
 
 const SearchResults = ({
@@ -208,6 +300,7 @@ const SearchResults = ({
   setSelectedItem,
   query,
   expanded,
+  compact,
 }: SearchResultsProps) => {
   const { t } = useTranslation()
 
@@ -216,6 +309,7 @@ const SearchResults = ({
       key={album.id}
       query={query}
       album={album}
+      compact={compact}
       selected={selectedItem == i}
       setSelected={() => setSelectedItem(i)}
     />
@@ -226,6 +320,7 @@ const SearchResults = ({
       key={media.id}
       query={query}
       media={media}
+      compact={compact}
       selected={selectedItem == i + albumElements.length}
       setSelected={() => setSelectedItem(i + albumElements.length)}
     />
@@ -254,6 +349,17 @@ const SearchResults = ({
       }}
     >
       {message}
+      {!loading && query.trim() !== '' && (
+        <div className="pt-3 pb-2 mb-1 text-center border-b dark:border-dark-border">
+          <NavLink
+            to={`/search?q=${encodeURIComponent(query.trim())}`}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            tabIndex={-1}
+          >
+            {t('header.search.view_all_results', 'View all results')}
+          </NavLink>
+        </div>
+      )}
       {albumElements.length > 0 && (
         <>
           <ResultTitle>
@@ -296,7 +402,9 @@ const SearchRow = ({
 
   useEffect(() => {
     const keydownEvent = (event: KeyboardEvent) => {
-      if (event.key == 'Enter') navigate(link)
+      // Every row listens on the document, so without the selected check
+      // they all navigate at once and whichever registered last wins.
+      if (event.key == 'Enter' && selected) navigate(link)
     }
 
     document.addEventListener('keydown', keydownEvent)
@@ -334,20 +442,30 @@ const SearchRow = ({
 type PhotoRowArgs = {
   query: string
   media: searchQuery_search_media
+  compact: boolean
   selected: boolean
   setSelected(): void
 }
 
-const PhotoRow = ({ query, media, selected, setSelected }: PhotoRowArgs) => (
+const PhotoRow = ({
+  query,
+  media,
+  compact,
+  selected,
+  setSelected,
+}: PhotoRowArgs) => (
   <SearchRow
     key={media.id}
     id={media.id}
     link={`/album/${media.album.id}`}
     preview={
-      <ProtectedImage
-        src={media?.thumbnail?.url}
-        className="w-14 h-14 object-cover"
-      />
+      compact ? null : (
+        <ProtectedImage
+          src={media?.thumbnail?.url}
+          className="w-14 h-14 object-cover"
+          lazyLoading
+        />
+      )
     }
     label={searchHighlighted(query, media.title)}
     selected={selected}
@@ -358,20 +476,30 @@ const PhotoRow = ({ query, media, selected, setSelected }: PhotoRowArgs) => (
 type AlbumRowArgs = {
   query: string
   album: searchQuery_search_albums
+  compact: boolean
   selected: boolean
   setSelected(): void
 }
 
-const AlbumRow = ({ query, album, selected, setSelected }: AlbumRowArgs) => (
+const AlbumRow = ({
+  query,
+  album,
+  compact,
+  selected,
+  setSelected,
+}: AlbumRowArgs) => (
   <SearchRow
     key={album.id}
     id={album.id}
     link={`/album/${album.id}`}
     preview={
-      <ProtectedImage
-        src={album?.thumbnail?.thumbnail?.url}
-        className="w-14 h-14 rounded object-cover"
-      />
+      compact ? null : (
+        <ProtectedImage
+          src={album?.thumbnail?.thumbnail?.url}
+          className="w-14 h-14 rounded object-cover"
+          lazyLoading
+        />
+      )
     }
     label={searchHighlighted(query, album.title)}
     selected={selected}

@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "Albums",
         "media": "Medie"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,15 @@
   "routes": {
     "page_not_found": "Side ikke fundet"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_one": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "Det maksimale antal medier som må skannes samtidig",
@@ -166,6 +176,10 @@
       "language_selector": {
         "placeholder": "Vælg sprog"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": "Samme som system"
@@ -179,7 +193,8 @@
         },
         "title": "Temaindstillinger"
       },
-      "title": "Brugerindstillinger"
+      "title": "Brugerindstillinger",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
