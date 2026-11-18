@@ -69,19 +69,26 @@ func (c *AlbumScannerCache) AlbumContainsPhotos(path string) *bool {
 
 func (c *AlbumScannerCache) GetMediaType(path string) media_type.MediaType {
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	result, found := c.photo_types[path]
+	c.mutex.Unlock()
+
 	if found {
 		return result
 	}
 
+	// Resolve the media type outside of the lock. This shells out to exiftool,
+	// and every exiftool call is serialized process-wide, so holding the cache
+	// mutex across it would serialize media type detection for all scanner
+	// workers. Two workers resolving the same path concurrently is harmless:
+	// the lookup is idempotent and the last writer wins.
 	mediaType := media_type.GetMediaType(path)
 	if mediaType == media_type.TypeUnknown {
 		return mediaType
 	}
 
+	c.mutex.Lock()
 	c.photo_types[path] = mediaType
+	c.mutex.Unlock()
 
 	return mediaType
 }
