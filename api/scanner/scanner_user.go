@@ -6,10 +6,11 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
-	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
@@ -127,62 +128,48 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		transErr := db.Transaction(func(tx *gorm.DB) error {
 			log.Printf("Scanning directory: %s", albumPath)
 
-			// check if album already exists
-			var albumResult []models.Album
-			result := tx.Where("path_hash = ?", models.MD5Hash(albumPath)).Find(&albumResult)
-			if result.Error != nil {
-				return result.Error
+			var albumParentID *int
+			parentOwners := make([]models.User, 0)
+			if albumParent != nil {
+				albumParentID = &albumParent.ID
+
+				if err := tx.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
+					return err
+				}
 			}
 
-			// album does not exist, create new
-			if len(albumResult) == 0 {
-				albumTitle := path.Base(albumPath)
+			album = &models.Album{
+				Title:         path.Base(albumPath),
+				ParentAlbumID: albumParentID,
+				Path:          albumPath,
+			}
 
-				var albumParentID *int
-				parentOwners := make([]models.User, 0)
-				if albumParent != nil {
-					albumParentID = &albumParent.ID
+			created, err := models.FindOrCreateAlbum(tx, album)
+			if err != nil {
+				return errors.Wrap(err, "find or create album")
+			}
 
-					if err := tx.Model(&albumParent).Association("Owners").Find(&parentOwners); err != nil {
-						return err
-					}
-				}
-
-				album = &models.Album{
-					Title:         albumTitle,
-					ParentAlbumID: albumParentID,
-					Path:          albumPath,
-				}
-
-				// Store album ignore
-				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
-
-				if err := tx.Create(&album).Error; err != nil {
-					return errors.Wrap(err, "insert album into database")
-				}
-
-				if err := tx.Model(&album).Association("Owners").Append(parentOwners); err != nil {
+			if created {
+				if err := tx.Model(album).Association("Owners").Append(parentOwners); err != nil {
 					return errors.Wrap(err, "add owners to album")
 				}
 			} else {
-				album = &albumResult[0]
-
 				// Add user as an owner of the album if not already
 				var userAlbumOwner []models.User
-				if err := tx.Model(&album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
+				if err := tx.Model(album).Association("Owners").Find(&userAlbumOwner, "user_albums.user_id = ?", user.ID); err != nil {
 					return err
 				}
 				if len(userAlbumOwner) == 0 {
 					newUser := models.User{}
 					newUser.ID = user.ID
-					if err := tx.Model(&album).Association("Owners").Append(&newUser); err != nil {
+					if err := tx.Model(album).Association("Owners").Append(&newUser); err != nil {
 						return err
 					}
 				}
-
-				// Update album ignore
-				albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
 			}
+
+			// Store/update album ignore
+			albumCache.InsertAlbumIgnore(albumPath, albumIgnore)
 
 			userAlbums = append(userAlbums, album)
 
@@ -219,10 +206,86 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, albumCache *scanner_cache
 		}
 	}
 
-	deleteErrors := cleanup_tasks.DeleteOldUserAlbums(db, userAlbums, user)
-	scanErrors = append(scanErrors, deleteErrors...)
+	if len(scanErrors) == 0 {
+		deleteErrors := DeleteOldUserAlbums(db, userAlbums, user)
+		scanErrors = append(scanErrors, deleteErrors...)
+	}
 
 	return userAlbums, scanErrors
+}
+
+// DeleteOldUserAlbums finds and deletes old albums in the database and cache that does not exist on the filesystem anymore.
+func DeleteOldUserAlbums(db *gorm.DB, scannedAlbums []*models.Album, user *models.User) []error {
+	if len(scannedAlbums) == 0 {
+		return nil
+	}
+
+	scannedAlbumIDs := make([]any, len(scannedAlbums))
+	for i, album := range scannedAlbums {
+		scannedAlbumIDs[i] = album.ID
+	}
+
+	// Old albums to be deleted
+	var deleteAlbums []models.Album
+
+	// Find old albums in database
+	query := db.
+		Select("albums.*").
+		Table("user_albums").
+		Joins("JOIN albums ON user_albums.album_id = albums.id").
+		Where("user_id = ?", user.ID).
+		Where("album_id NOT IN (?)", scannedAlbumIDs)
+
+	if err := query.Find(&deleteAlbums).Error; err != nil {
+		return []error{errors.Wrap(err, "get albums to be deleted from database")}
+	}
+
+	if len(deleteAlbums) == 0 {
+		return []error{}
+	}
+
+	deleteErrors := make([]error, 0)
+
+	// Delete old albums from cache
+	deleteAlbumIDs := make([]int, len(deleteAlbums))
+	for i, album := range deleteAlbums {
+		deleteAlbumIDs[i] = album.ID
+	}
+
+	// Delete old albums from database
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("album_id IN (?)", deleteAlbumIDs).Delete(&models.UserAlbums{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("id IN (?)", deleteAlbumIDs).Delete(models.Album{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	for _, album := range deleteAlbums {
+		cachePath := path.Join(utils.MediaCachePath(), strconv.Itoa(int(album.ID)))
+		err := os.RemoveAll(cachePath)
+		if err != nil {
+			deleteErrors = append(deleteErrors, errors.Wrapf(err, "delete unused cache folder (%s)", cachePath))
+		}
+	}
+
+	if err != nil {
+		scanner_utils.ScannerError(nil, "Could not delete old albums from database:\n%s\n", err)
+		deleteErrors = append(deleteErrors, err)
+	}
+
+	// Reload faces after deleting albums
+	if face_detection.GlobalFaceDetector != nil {
+		if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
+			deleteErrors = append(deleteErrors, err)
+		}
+	}
+
+	return deleteErrors
 }
 
 func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerCache, albumIgnore []string) bool {

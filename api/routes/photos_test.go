@@ -13,7 +13,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
-	"github.com/photoview/photoview/api/scanner"
 	"github.com/photoview/photoview/api/test_utils"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/stretchr/testify/assert"
@@ -89,11 +88,11 @@ func TestPhotoRoutes(t *testing.T) {
 		os.Remove(cachedPath)
 
 		// mock scan to fail
-		origScan := scanner.ProcessSingleMediaFunc
-		scanner.ProcessSingleMediaFunc = func(ctx context.Context, db *gorm.DB, m *models.Media) error {
+		origScan := processSingleMediaFn
+		processSingleMediaFn = func(ctx context.Context, db *gorm.DB, m *models.Media) error {
 			return fmt.Errorf("scan error")
 		}
-		defer func() { scanner.ProcessSingleMediaFunc = origScan }()
+		defer func() { processSingleMediaFn = origScan }()
 
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, req)

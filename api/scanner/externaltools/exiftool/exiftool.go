@@ -241,6 +241,20 @@ func (e *Exiftool) QueryJSONTagsByNumber(file string, value any) error {
 	return nil
 }
 
+// MIMEType returns the MIME type of `file` as reported by exiftool.
+func (e *Exiftool) MIMEType(file string) (string, error) {
+	var v MIMEType
+	if err := e.QueryJSONTagsByNumber(file, &v); err != nil {
+		return "", fmt.Errorf("get mime type of %q error: %w", file, err)
+	}
+
+	if v.MIMEType == nil {
+		return "", nil
+	}
+
+	return *v.MIMEType, nil
+}
+
 // SaveJPEGPreview saves a preview jpeg from `src` to `previewOutput`.
 func (e *Exiftool) SaveJPEGPreview(src string, previewOutput string) (bool, error) {
 	saved, err := e.rawSaveEmbedFile(previewOutput, "-JpgFromRaw", src)
