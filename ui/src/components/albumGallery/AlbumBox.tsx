@@ -3,11 +3,23 @@ import { Link } from 'react-router-dom'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { albumQuery_album_subAlbums } from '../../Pages/AlbumPage/__generated__/albumQuery'
 
-interface AlbumBoxImageProps {
-  src?: string
+const NEW_ALBUM_DAYS = 14
+
+function isNewAlbum(createdAt?: string): boolean {
+  if (!createdAt) return false
+  const created = new Date(createdAt)
+  const now = new Date()
+  const diffMs = now.getTime() - created.getTime()
+  const diffDays = diffMs / (1000 * 60 * 60 * 24)
+  return diffDays <= NEW_ALBUM_DAYS
 }
 
-const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
+interface AlbumBoxImageProps {
+  src?: string
+  isNew?: boolean
+}
+
+const AlbumBoxImage = ({ src, isNew, ...props }: AlbumBoxImageProps) => {
   const [loaded, setLoaded] = useState(false)
 
   let image = null
@@ -33,6 +45,13 @@ const AlbumBoxImage = ({ src, ...props }: AlbumBoxImageProps) => {
     <div className="xs:w-[220px] xs:h-[220px] relative rounded-lg">
       {image}
       {placeholder}
+      {isNew && (
+        <div className="absolute top-2 right-2 z-10">
+          <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow-md">
+            NEW
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -53,7 +72,7 @@ export const AlbumBox = ({ album, customLink, ...props }: AlbumBoxProps) => {
         className={wrapperClasses}
         {...props}
       >
-        <AlbumBoxImage src={album.thumbnail?.thumbnail?.url} />
+        <AlbumBoxImage src={album.thumbnail?.thumbnail?.url} isNew={isNewAlbum(album.createdAt)} />
         <p className="whitespace-nowrap overflow-hidden overflow-ellipsis">
           {album.title}
         </p>

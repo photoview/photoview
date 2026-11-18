@@ -1,6 +1,8 @@
 type Album {
   id: ID!
   title: String!
+  "When the album was created"
+  createdAt: Time!
 
   "The media inside this album"
   media(
