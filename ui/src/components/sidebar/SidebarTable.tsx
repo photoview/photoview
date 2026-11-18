@@ -11,9 +11,18 @@ const HeadRow = styled.tr.attrs({
     'text-left uppercase text-xs border-gray-100 dark:border-dark-border2 border-b border-t',
 })``
 
+// A row is not a button: its actions are the buttons inside it, so a screen
+// reader announces each of them and a tap on one cell cannot trigger another.
 const Row = styled.tr.attrs({
+  className: 'border-gray-100 dark:border-dark-border2 border-b',
+})``
+
+// Fills its cell, so the row's leading column stays as large a target as the
+// whole row used to be.
+const RowButton = styled.button.attrs({
+  type: 'button',
   className:
-    'cursor-pointer border-gray-100 dark:border-dark-border2 border-b hover:bg-gray-50 focus:bg-gray-50 dark:hover:bg-[#3c4759] dark:focus:bg-[#3c4759]',
+    'w-full text-left pl-4 pr-1 py-2 break-words hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-50 dark:hover:bg-[#3c4759] dark:focus-visible:bg-[#3c4759]',
 })``
 
 export default {
@@ -21,4 +30,5 @@ export default {
   Head,
   HeadRow,
   Row,
+  RowButton,
 }
