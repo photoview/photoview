@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -159,30 +160,55 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 				continue
 			}
 
-			err = ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
-				media, isNewMedia, err := ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
-				if err != nil {
-					return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
-				}
-
-				if err = scanner_tasks.Tasks.AfterMediaFound(ctx, media, isNewMedia); err != nil {
-					return err
-				}
-
-				albumMedia = append(albumMedia, media)
-
-				return nil
-			})
-
+			media, err := scanMediaWithFollowUp(ctx, mediaPath, scanner_tasks.Tasks.AfterMediaFound)
 			if err != nil {
 				scanner_utils.ScannerError(ctx, "Error scanning media for album (%d): %s\n", ctx.GetAlbum().ID, err)
 				continue
 			}
+
+			albumMedia = append(albumMedia, media)
 		}
 
 	}
 
 	return albumMedia, nil
+}
+
+type afterMediaFoundFunc func(ctx scanner_task.TaskContext, media *models.Media, isNewMedia bool) error
+
+func scanMediaWithFollowUp(ctx scanner_task.TaskContext, mediaPath string, afterMediaFound afterMediaFoundFunc) (*models.Media, error) {
+	var media *models.Media
+	var isNewMedia bool
+
+	// Only the lookup/insert of the media row belongs in a transaction. Follow-up
+	// tasks run after it commits because they may invoke slow external tools.
+	err := ctx.DatabaseTransaction(func(ctx scanner_task.TaskContext) error {
+		var err error
+		media, isNewMedia, err = ScanMedia(ctx.GetDB(), mediaPath, ctx.GetAlbum().ID, ctx.GetCache())
+		if err != nil {
+			return errors.Wrapf(err, "scanning media error (%s)", mediaPath)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := afterMediaFound(ctx, media, isNewMedia); err != nil {
+		if isNewMedia {
+			// Do not leave a committed row that later scans would treat as
+			// already initialized, since their follow-up tasks are skipped.
+			cleanupDB := ctx.GetDB().WithContext(context.WithoutCancel(ctx.Context))
+			if cleanupErr := cleanupDB.Delete(media).Error; cleanupErr != nil {
+				return nil, errors.Wrapf(err, "follow-up tasks for media (%s) failed and cleanup of new media row failed: %v", mediaPath, cleanupErr)
+			}
+		}
+
+		return nil, errors.Wrapf(err, "follow-up tasks for media (%s)", mediaPath)
+	}
+
+	return media, nil
 }
 
 func processMedia(ctx scanner_task.TaskContext, mediaData *media_encoding.EncodeMediaData) ([]*models.MediaURL, error) {
