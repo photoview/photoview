@@ -250,9 +250,12 @@ func AddAlbumToQueue(album *models.Album) error {
 
 	global_scanner_queue.mutex.Lock()
 	for _, album := range albums {
-		global_scanner_queue.addJob(&ScannerJob{
-			ctx: scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, albumCache),
-		})
+		// Through the constructor rather than a struct literal: a job that
+		// gains fields the constructor fills in (#1492 adds a cancel function
+		// and an id) then fails to compile here instead of being queued with
+		// those fields left empty.
+		job := NewScannerJob(scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, albumCache))
+		global_scanner_queue.addJob(&job)
 	}
 	global_scanner_queue.mutex.Unlock()
 
