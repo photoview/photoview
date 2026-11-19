@@ -219,7 +219,12 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, updateError
 	}
 
-	face_detection.GlobalFaceDetector.MergeImageFaces(sourceFaceGroupIDs, int32(destinationFaceGroupID))
+	// The recognizer keeps its own copy of every face's group. The source groups
+	// are gone now, so their faces have to point at the destination there too -
+	// otherwise new photos keep being matched to groups that no longer exist.
+	for _, sourceID := range sourceFaceGroupIDs {
+		face_detection.GlobalFaceDetector.MergeCategories(int32(sourceID), int32(destinationFaceGroup.ID))
+	}
 
 	return destinationFaceGroup, nil
 }
