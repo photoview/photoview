@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/photoview/photoview/api/database/drivers"
+	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/scanner/periodic_scanner"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
@@ -46,6 +47,47 @@ func (r *mutationResolver) ScanUser(ctx context.Context, userID int) (*models.Sc
 	// Discovery errors are per-root: albums under healthy roots are still
 	// queued, so the scan has started even when some roots failed. Report the
 	// failures instead of discarding them, rather than reporting a clean start.
+	startMessage := "Scanner started"
+	if scanErr != nil {
+		startMessage = fmt.Sprintf("Scanner started, some albums could not be queued: %v", scanErr)
+	}
+
+	return &models.ScannerResult{
+		Finished: false,
+		Success:  scanErr == nil,
+		Message:  &startMessage,
+	}, nil
+}
+
+// ScanAlbum is the resolver for the scanAlbum field.
+func (r *mutationResolver) ScanAlbum(ctx context.Context, albumID int) (*models.ScannerResult, error) {
+	db := r.DB(ctx)
+
+	user := auth.UserFromContext(ctx)
+	if user == nil {
+		return nil, auth.ErrUnauthorized
+	}
+
+	var album models.Album
+	if err := db.First(&album, albumID).Error; err != nil {
+		return nil, fmt.Errorf("get album from database: %w", err)
+	}
+
+	if !user.Admin {
+		ownsAlbum, err := user.OwnsAlbum(db, &album)
+		if err != nil {
+			return nil, err
+		}
+		if !ownsAlbum {
+			return nil, auth.ErrUnauthorized
+		}
+	}
+
+	scanErr := addAlbumToQueue(&album)
+
+	// Same reading as ScanUser: the albums that could be read are queued, so
+	// the scan has started even when a sub-album failed. Report the failures
+	// instead of answering with a clean start.
 	startMessage := "Scanner started"
 	if scanErr != nil {
 		startMessage = fmt.Sprintf("Scanner started, some albums could not be queued: %v", scanErr)

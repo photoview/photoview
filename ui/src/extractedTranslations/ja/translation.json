@@ -259,6 +259,10 @@
         }
       },
       "reset_cover": "カバー画像をリセット",
+      "scan": {
+        "rescan": "",
+        "title": ""
+      },
       "set_cover": "カバー画像として設定",
       "title_placeholder": "アルバムタイトル"
     },
