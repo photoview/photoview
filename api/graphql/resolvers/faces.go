@@ -28,13 +28,12 @@ func (r *faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGrou
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	if err := user.FillAlbums(db); err != nil {
+	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
+	if err != nil {
 		return nil, err
 	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
+	if len(userAlbumIDs) == 0 {
+		return []*models.ImageFace{}, nil
 	}
 
 	query := db.
@@ -64,13 +63,12 @@ func (r *faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.Face
 		return -1, ErrFaceDetectorNotInitialized
 	}
 
-	if err := user.FillAlbums(db); err != nil {
+	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
+	if err != nil {
 		return -1, err
 	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
+	if len(userAlbumIDs) == 0 {
+		return 0, nil
 	}
 
 	query := db.
@@ -128,7 +126,7 @@ func (r *mutationResolver) SetFaceGroupLabel(ctx context.Context, faceGroupID in
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	faceGroup, err := userOwnedFaceGroup(db, user, faceGroupID)
+	faceGroup, err := userOwnedFaceGroup(ctx, db, user, faceGroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +154,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		return nil, errors.New("at least one source face group ID is required")
 	}
 
-	destinationFaceGroup, err := userOwnedFaceGroup(db, user, destinationFaceGroupID)
+	destinationFaceGroup, err := userOwnedFaceGroup(ctx, db, user, destinationFaceGroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +168,7 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 		}
 
 		// Ensure the user owns at least one picture with each source
-		sourceFaceGroup, err := userOwnedFaceGroup(db, user, sourceID)
+		sourceFaceGroup, err := userOwnedFaceGroup(ctx, db, user, sourceID)
 		if err != nil {
 			return nil, err
 		}
@@ -242,7 +240,7 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 	transErr := db.Transaction(func(tx *gorm.DB) error {
 
 		var err error
-		destFaceGroup, err = userOwnedFaceGroup(tx, user, destinationFaceGroupID)
+		destFaceGroup, err = userOwnedFaceGroup(ctx, tx, user, destinationFaceGroupID)
 		if err != nil {
 			return err
 		}
@@ -309,10 +307,25 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 	}
 
 	var updatedImageFaces []*models.ImageFace
+	var userOwnedImageFaces []*models.ImageFace
 
 	transactionError := db.Transaction(func(tx *gorm.DB) error {
 		var err error
 		updatedImageFaces, err = face_detection.GlobalFaceDetector.RecognizeUnlabeledFaces(tx, user)
+		if err != nil {
+			return err
+		}
+
+		// Unlabeled face groups can hold faces from the pictures of other users.
+		// Regular users only see faces in albums they own. Administrators see the
+		// full result, the same exception as move and detach. This does not change
+		// detection during a scan.
+		updatedImageFaceIDs := make([]int, len(updatedImageFaces))
+		for i, imageFace := range updatedImageFaces {
+			updatedImageFaceIDs[i] = imageFace.ID
+		}
+
+		userOwnedImageFaces, err = getUserOwnedImageFaces(tx, user, updatedImageFaceIDs)
 
 		return err
 	})
@@ -321,7 +334,19 @@ func (r *mutationResolver) RecognizeUnlabeledFaces(ctx context.Context) ([]*mode
 		return nil, transactionError
 	}
 
-	return updatedImageFaces, nil
+	userOwnedImageFaceIDs := make(map[int]bool, len(userOwnedImageFaces))
+	for _, imageFace := range userOwnedImageFaces {
+		userOwnedImageFaceIDs[imageFace.ID] = true
+	}
+
+	visibleImageFaces := make([]*models.ImageFace, 0, len(userOwnedImageFaces))
+	for _, imageFace := range updatedImageFaces {
+		if userOwnedImageFaceIDs[imageFace.ID] {
+			visibleImageFaces = append(visibleImageFaces, imageFace)
+		}
+	}
+
+	return visibleImageFaces, nil
 }
 
 // DetachImageFaces is the resolver for the detachImageFaces field.
@@ -385,13 +410,12 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	if err := user.FillAlbums(db); err != nil {
+	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
+	if err != nil {
 		return nil, err
 	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
+	if len(userAlbumIDs) == 0 {
+		return []*models.FaceGroup{}, nil
 	}
 
 	faceGroupQuery := db.
@@ -425,13 +449,12 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	if err := user.FillAlbums(db); err != nil {
+	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
+	if err != nil {
 		return nil, err
 	}
-
-	userAlbumIDs := make([]int, len(user.Albums))
-	for i, album := range user.Albums {
-		userAlbumIDs[i] = album.ID
+	if len(userAlbumIDs) == 0 {
+		return &models.FaceGroup{}, nil
 	}
 
 	faceGroupQuery := db.
