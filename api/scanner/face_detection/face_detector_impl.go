@@ -94,6 +94,17 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 		return err
 	}
 
+	// A rescan that rebuilds the thumbnails calls this again for the same
+	// photo. Detecting anew would add a copy of every face, and deleting the
+	// old faces first would throw away how the user sorted them.
+	var existingFaces int64
+	if err := db.Model(&models.ImageFace{}).Where("media_id = ?", media.ID).Count(&existingFaces).Error; err != nil {
+		return err
+	}
+	if existingFaces > 0 {
+		return nil
+	}
+
 	var thumbnailURL *models.MediaURL
 	for _, url := range media.MediaURL {
 		if url.Purpose == models.PhotoThumbnail {
@@ -121,7 +132,9 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 	}
 
 	for _, face := range faces {
-		fd.classifyFace(db, &face, media, thumbnailPath)
+		if err := fd.classifyFace(db, &face, media, thumbnailPath); err != nil {
+			return errors.Wrap(err, "error saving face")
+		}
 	}
 
 	return nil

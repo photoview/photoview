@@ -220,6 +220,36 @@ func TestFullScan(t *testing.T) {
 		}
 	})
 
+	t.Run("DetectFacesAgainAddsNoCopies", func(t *testing.T) {
+		if face_detection.GlobalFaceDetector == nil {
+			t.Skip("face detection is not available")
+		}
+
+		var face models.ImageFace
+		if err := db.First(&face).Error; err != nil {
+			t.Fatal("get an image face error:", err)
+		}
+
+		countFaces := func() int64 {
+			var count int64
+			if err := db.Model(&models.ImageFace{}).Where("media_id = ?", face.MediaID).Count(&count).Error; err != nil {
+				t.Fatal("count image faces error:", err)
+			}
+			return count
+		}
+
+		before := countFaces()
+		// What a rescan that rebuilds the thumbnails does.
+		media := models.Media{Model: models.Model{ID: face.MediaID}}
+		if err := face_detection.GlobalFaceDetector.DetectFaces(db, &media); err != nil {
+			t.Fatal("detect faces again error:", err)
+		}
+
+		if after := countFaces(); after != before {
+			t.Errorf("faces of media %d after detecting again = %d, want %d", face.MediaID, after, before)
+		}
+	})
+
 	t.Run("CheckPhotosOrientation", func(t *testing.T) {
 		photoFiles := []string{
 			"left_arrow_normal_web.jpg",
