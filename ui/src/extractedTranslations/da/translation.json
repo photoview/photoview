@@ -65,6 +65,30 @@
   "meta": {
     "description": "Simpelt og Brugervenligt Photo-galleri for Personlige Servere"
   },
+  "notification": {
+    "error": {
+      "graphql": {
+        "content": "",
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "logout_note": "",
+      "network": {
+        "content": "",
+        "header": ""
+      },
+      "server": {
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "session": {
+        "content": "",
+        "header": ""
+      }
+    }
+  },
   "people_page": {
     "action_label": {
       "change_label": "Ændre navn",

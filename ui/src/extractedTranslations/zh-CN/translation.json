@@ -65,6 +65,30 @@
   "meta": {
     "description": "为个人服务器打造的简单及易用的照片库"
   },
+  "notification": {
+    "error": {
+      "graphql": {
+        "content": "",
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "logout_note": "",
+      "network": {
+        "content": "",
+        "header": ""
+      },
+      "server": {
+        "header": "",
+        "multiple_content": "",
+        "multiple_header": ""
+      },
+      "session": {
+        "content": "",
+        "header": ""
+      }
+    }
+  },
   "people_page": {
     "action_label": {
       "change_label": "修改面孔命名",
