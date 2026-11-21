@@ -52,10 +52,10 @@ const LoginForm = () => {
     AuthorizeVariables
   >(authorizeMutation, {
     onCompleted: data => {
-      const { success, token } = data.authorizeUser
+      const { success } = data.authorizeUser
 
-      if (success && token) {
-        login(token)
+      if (success) {
+        login()
       }
     },
   })

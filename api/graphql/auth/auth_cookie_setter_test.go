@@ -1,0 +1,117 @@
+package auth_test
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/photoview/photoview/api/graphql/auth"
+	"github.com/stretchr/testify/assert"
+)
+
+// Emulate what the AuthorizeUser and InitialSetupWizard resolvers do without depending on them directly
+func setResponseAuthCookieHandler(token string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie := auth.ResolverCookieFromContext(r.Context())
+		*cookie = token
+		w.WriteHeader(200)
+	})
+}
+
+// setResponseAuthCookieHandlerViaWrite is like setResponseAuthCookieHandler but
+// triggers the cookie via Write instead of WriteHeader, exercising the Write intercept path.
+func setResponseAuthCookieHandlerViaWrite(token string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie := auth.ResolverCookieFromContext(r.Context())
+		*cookie = token
+		w.Write([]byte("ok"))
+	})
+}
+
+// Emulate an endpoint that is not AuthorizeUser or InitialSetupWizard
+func noResponseAuthCookieHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	})
+}
+
+// TestAuthCookieSetterMiddleware verifies that AuthCookieSetter middleware sets
+// the auth-token cookie with the correct value and SameSite/Secure attributes
+// when a resolver writes a token, and omits the cookie when no token is set.
+func TestAuthCookieSetterMiddleware(t *testing.T) {
+
+	testCases := []struct {
+		name                  string
+		responseAuthCookieVal string
+		uiOnSeparateDomain    bool
+		useWrite              bool
+	}{
+		{
+			name:                  "Login or initial setup endpoint sets auth cookie with samesite lax",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    false,
+		},
+		{
+			name:                  "Login or initial setup endpoint sets auth cookie with samesite none",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    true,
+		},
+		{
+			name:                  "Non Login or initial setup endpoint does not set auth cookie",
+			responseAuthCookieVal: "",
+		},
+		{
+			name:                  "Auth cookie set via Write with samesite lax",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    false,
+			useWrite:              true,
+		},
+		{
+			name:                  "Auth cookie set via Write with samesite none on separate domain",
+			responseAuthCookieVal: "cookie",
+			uiOnSeparateDomain:    true,
+			useWrite:              true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/graphql", nil)
+
+			var authHandler http.Handler
+
+			switch {
+			case tc.responseAuthCookieVal != "" && tc.useWrite:
+				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(setResponseAuthCookieHandlerViaWrite(tc.responseAuthCookieVal))
+			case tc.responseAuthCookieVal != "":
+				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(setResponseAuthCookieHandler(tc.responseAuthCookieVal))
+			default:
+				authHandler = auth.AuthCookieSetter(tc.uiOnSeparateDomain)(noResponseAuthCookieHandler())
+			}
+
+			recorder := httptest.NewRecorder()
+			authHandler.ServeHTTP(recorder, req)
+
+			var authToken *http.Cookie
+			for _, cookie := range recorder.Result().Cookies() {
+				if cookie.Name == "auth-token" {
+					authToken = cookie
+					break
+				}
+			}
+
+			if tc.responseAuthCookieVal != "" {
+				assert.Equal(t, tc.responseAuthCookieVal, authToken.Value)
+				if tc.uiOnSeparateDomain {
+					assert.Equal(t, http.SameSiteNoneMode, authToken.SameSite)
+					assert.True(t, authToken.Secure)
+				} else {
+					assert.Equal(t, http.SameSiteLaxMode, authToken.SameSite)
+					assert.False(t, authToken.Secure)
+				}
+			} else {
+				assert.Nil(t, authToken)
+			}
+		})
+	}
+}

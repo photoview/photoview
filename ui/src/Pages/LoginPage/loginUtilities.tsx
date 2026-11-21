@@ -1,5 +1,4 @@
 import { gql } from '@apollo/client'
-import { saveTokenCookie } from '../../helpers/authentication'
 import styled from 'styled-components'
 
 export const INITIAL_SETUP_QUERY = gql`
@@ -10,8 +9,7 @@ export const INITIAL_SETUP_QUERY = gql`
   }
 `
 
-export function login(token: string) {
-  saveTokenCookie(token)
+export function login() {
   window.location.href = `${import.meta.env.BASE_URL}`
 }
 
