@@ -28,18 +28,15 @@ func (r *faceGroupResolver) ImageFaces(ctx context.Context, obj *models.FaceGrou
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
-	if err != nil {
-		return nil, err
-	}
-	if len(userAlbumIDs) == 0 {
-		return []*models.ImageFace{}, nil
-	}
-
+	// Administrators see every face in the group. Other users only see faces in
+	// albums they own. Membership is a subquery, so a large library does not bind
+	// one parameter per album and the ID list is not copied for every field.
 	query := db.
 		Joins("Media").
-		Where(faceGroupIDIsQuestion, obj.ID).
-		Where("album_id IN (?)", userAlbumIDs)
+		Where(faceGroupIDIsQuestion, obj.ID)
+	if !user.Admin {
+		query = query.Where(userOwnsImageFace, user.ID)
+	}
 
 	query = models.FormatSQL(query, nil, paginate)
 
@@ -63,19 +60,12 @@ func (r *faceGroupResolver) ImageFaceCount(ctx context.Context, obj *models.Face
 		return -1, ErrFaceDetectorNotInitialized
 	}
 
-	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
-	if err != nil {
-		return -1, err
-	}
-	if len(userAlbumIDs) == 0 {
-		return 0, nil
-	}
-
 	query := db.
 		Model(&models.ImageFace{}).
-		Joins("Media").
-		Where(faceGroupIDIsQuestion, obj.ID).
-		Where("album_id IN (?)", userAlbumIDs)
+		Where(faceGroupIDIsQuestion, obj.ID)
+	if !user.Admin {
+		query = query.Where(userOwnsImageFace, user.ID)
+	}
 
 	var count int64
 	if err := query.Count(&count).Error; err != nil {
@@ -187,10 +177,12 @@ func (r *mutationResolver) CombineFaceGroups(ctx context.Context, destinationFac
 			return errors.New("cannot merge face groups because the destination would contain duplicate images")
 		}
 
-		if err := tx.
-			Model(&models.ImageFace{}).
-			Where(faceGroupIDsInQuestion, sourceFaceGroupIDs).
-			Update("face_group_id", destinationFaceGroup.ID).Error; err != nil {
+		if err := forEachIDBatch(sourceFaceGroupIDs, func(batch []int) error {
+			return tx.
+				Model(&models.ImageFace{}).
+				Where(faceGroupIDsInQuestion, batch).
+				Update("face_group_id", destinationFaceGroup.ID).Error
+		}); err != nil {
 			return err
 		}
 
@@ -263,17 +255,27 @@ func (r *mutationResolver) MoveImageFaces(ctx context.Context, imageFaceIDs []in
 		}
 
 		var sourceFaceGroups []*models.FaceGroup
-		if err := tx.
-			Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-			Where(imageFacesIDInQuestion, userOwnedImageFaceIDs).
-			Find(&sourceFaceGroups).Error; err != nil {
+		if err := forEachIDBatch(userOwnedImageFaceIDs, func(batch []int) error {
+			var groups []*models.FaceGroup
+			if err := tx.
+				Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
+				Where(imageFacesIDInQuestion, batch).
+				Find(&groups).Error; err != nil {
+				return err
+			}
+			sourceFaceGroups = append(sourceFaceGroups, groups...)
+			return nil
+		}); err != nil {
 			return err
 		}
+		sourceFaceGroups = uniqueFaceGroups(sourceFaceGroups)
 
-		if err := tx.
-			Model(&models.ImageFace{}).
-			Where("id IN (?)", userOwnedImageFaceIDs).
-			Update("face_group_id", destFaceGroup.ID).Error; err != nil {
+		if err := forEachIDBatch(userOwnedImageFaceIDs, func(batch []int) error {
+			return tx.
+				Model(&models.ImageFace{}).
+				Where("id IN (?)", batch).
+				Update("face_group_id", destFaceGroup.ID).Error
+		}); err != nil {
 			return err
 		}
 
@@ -379,10 +381,12 @@ func (r *mutationResolver) DetachImageFaces(ctx context.Context, imageFaceIDs []
 			return err
 		}
 
-		if err := tx.
-			Model(&models.ImageFace{}).
-			Where("id IN (?)", userOwnedImageFaceIDs).
-			Update("face_group_id", newFaceGroup.ID).Error; err != nil {
+		if err := forEachIDBatch(userOwnedImageFaceIDs, func(batch []int) error {
+			return tx.
+				Model(&models.ImageFace{}).
+				Where("id IN (?)", batch).
+				Update("face_group_id", newFaceGroup.ID).Error
+		}); err != nil {
 			return err
 		}
 
@@ -410,18 +414,14 @@ func (r *queryResolver) MyFaceGroups(ctx context.Context, paginate *models.Pagin
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
-	if err != nil {
-		return nil, err
-	}
-	if len(userAlbumIDs) == 0 {
-		return []*models.FaceGroup{}, nil
-	}
-
+	// Administrators see every face group that has a face. Other users only see
+	// groups that contain a face in an album they own.
 	faceGroupQuery := db.
-		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Where("image_faces.media_id IN (?)",
-			db.Select("media.id").Table("media").Where(mediaAlbumIDInQuestion, userAlbumIDs)).
+		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id")
+	if !user.Admin {
+		faceGroupQuery = faceGroupQuery.Where(userOwnsImageFace, user.ID)
+	}
+	faceGroupQuery = faceGroupQuery.
 		Group("image_faces.face_group_id").
 		Group("face_groups.id").
 		Order("CASE WHEN label IS NULL THEN 1 ELSE 0 END").
@@ -449,22 +449,15 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 		return nil, ErrFaceDetectorNotInitialized
 	}
 
-	userAlbumIDs, err := auth.UserAlbumIDs(ctx, db, user)
-	if err != nil {
-		return nil, err
-	}
-	if len(userAlbumIDs) == 0 {
-		return &models.FaceGroup{}, nil
-	}
-
 	faceGroupQuery := db.
 		Joins("LEFT JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Joins("LEFT JOIN media ON image_faces.media_id = media.id").
-		Where("face_groups.id = ?", id).
-		Where(mediaAlbumIDInQuestion, userAlbumIDs)
+		Where("face_groups.id = ?", id)
+	if !user.Admin {
+		faceGroupQuery = faceGroupQuery.Where(userOwnsImageFace, user.ID)
+	}
 
 	var faceGroup models.FaceGroup
-	if err := faceGroupQuery.Find(&faceGroup).Error; err != nil {
+	if err := faceGroupQuery.Limit(1).Find(&faceGroup).Error; err != nil {
 		return nil, err
 	}
 

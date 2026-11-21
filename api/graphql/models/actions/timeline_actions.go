@@ -13,9 +13,13 @@ func MyTimeline(db *gorm.DB, user *models.User, paginate *models.Pagination, onl
 
 	const albumsTitleASC = "albums.title ASC"
 
-	query := db.
-		Joins("JOIN albums ON media.album_id = albums.id").
-		Where("albums.id IN (?)", db.Table("user_albums").Select("user_albums.album_id").Where("user_id = ?", user.ID))
+	// Administrators see the full timeline. Other users only see albums they own.
+	// The membership check stays a subquery so album IDs are not bound one by one.
+	query := db.Joins("JOIN albums ON media.album_id = albums.id")
+	if !user.Admin {
+		query = query.Where("albums.id IN (?)",
+			db.Table("user_albums").Select("user_albums.album_id").Where("user_id = ?", user.ID))
+	}
 
 	switch drivers.GetDatabaseDriverType(db) {
 	case drivers.POSTGRES:

@@ -6,6 +6,7 @@ import (
 
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -278,11 +279,18 @@ func TestFaceGroupPathsRefreshMembershipAfterRevocation(t *testing.T) {
 	require.NotEmpty(t, f.alice.Albums)
 
 	var membershipQueries int
+	var boundIDSlices int
 	const callbackName = "test:face-group-membership"
 	_ = f.db.Callback().Query().Remove(callbackName)
 	require.NoError(t, f.db.Callback().Query().After("gorm:query").Register(callbackName, func(tx *gorm.DB) {
 		if strings.Contains(strings.ToLower(tx.Statement.SQL.String()), "user_albums") {
 			membershipQueries++
+		}
+		for _, arg := range tx.Statement.Vars {
+			switch arg.(type) {
+			case []int, []int64:
+				boundIDSlices++
+			}
 		}
 	}))
 	t.Cleanup(func() { _ = f.db.Callback().Query().Remove(callbackName) })
@@ -310,7 +318,8 @@ func TestFaceGroupPathsRefreshMembershipAfterRevocation(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, gotGroup)
 	assert.Equal(t, group.ID, gotGroup.ID)
-	assert.Equal(t, 1, membershipQueries)
+	assert.Positive(t, membershipQueries, "membership is checked with the query, not a cached album list")
+	assert.Zero(t, boundIDSlices, "album and face lookups must not bind the full ID list")
 
 	// Delete the membership row directly. Association().Delete would also drop
 	// the album from the in-memory slice, which hides the stale-list bug.
@@ -347,9 +356,141 @@ func TestFaceGroupPathsRefreshMembershipAfterRevocation(t *testing.T) {
 	var reloaded models.FaceGroup
 	require.NoError(t, f.db.First(&reloaded, group.ID).Error)
 	assert.Nil(t, reloaded.Label)
-	assert.Equal(t, afterRemoval+1, membershipQueries)
+	assert.Greater(t, membershipQueries, afterRemoval, "the next operation must read membership again")
+	assert.Zero(t, boundIDSlices, "album and face lookups must not bind the full ID list")
 
 	// A regular second user still cannot label the group.
 	_, err = (&mutationResolver{f.resolver}).SetFaceGroupLabel(f.ctxFor(f.bob), group.ID, &label)
 	assert.Error(t, err)
+}
+
+// People queries are visible to an administrator who has no user_albums row.
+// A user who owns a different album still sees none of them.
+func TestFaceGroupQueriesAllowAdministratorWithoutAlbumMembership(t *testing.T) {
+	useStubFaceDetector(t)
+	f := setupTwoTenantFixtures(t)
+
+	password := "1234"
+	admin, err := models.RegisterUser(f.db, "admin", &password, true)
+	require.NoError(t, err)
+
+	label := "Carol"
+	group := f.addFaceGroup(t, &label)
+	face := f.addFace(t, f.bobMedia[0], group)
+
+	for _, tt := range []struct {
+		name  string
+		user  *models.User
+		faces int
+	}{
+		{"administrator without album membership", admin, 1},
+		{"user owning another album", f.alice, 0},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := f.ctxFor(tt.user)
+			groups, err := (&queryResolver{f.resolver}).MyFaceGroups(ctx, nil)
+			require.NoError(t, err)
+			if tt.faces == 0 {
+				assert.Empty(t, groups)
+			} else {
+				require.Len(t, groups, 1)
+				assert.Equal(t, group.ID, groups[0].ID)
+			}
+
+			got, err := (&queryResolver{f.resolver}).FaceGroup(ctx, group.ID)
+			require.NoError(t, err)
+			if tt.faces == 0 {
+				assert.NotEqual(t, group.ID, got.ID)
+			} else {
+				assert.Equal(t, group.ID, got.ID)
+			}
+
+			imageFaces, err := (&faceGroupResolver{f.resolver}).ImageFaces(ctx, group, nil)
+			require.NoError(t, err)
+			assert.Len(t, imageFaces, tt.faces)
+
+			count, err := (&faceGroupResolver{f.resolver}).ImageFaceCount(ctx, group)
+			require.NoError(t, err)
+			assert.Equal(t, tt.faces, count)
+			if tt.faces == 1 {
+				assert.Equal(t, face.ID, imageFaces[0].ID)
+			}
+		})
+	}
+}
+
+// The recognizer selects unlabeled groups before it classifies descriptors.
+// Administrators select every unlabeled group. Other users only select groups
+// that contain one of their pictures.
+func TestUnlabeledFaceGroupsAllowAdministratorWithoutAlbumMembership(t *testing.T) {
+	f := setupTwoTenantFixtures(t)
+
+	password := "1234"
+	admin, err := models.RegisterUser(f.db, "admin", &password, true)
+	require.NoError(t, err)
+
+	shared := f.addFaceGroup(t, nil)
+	bobOnly := f.addFaceGroup(t, nil)
+	labeledName := "labeled"
+	labeled := f.addFaceGroup(t, &labeledName)
+	f.addFace(t, f.aliceMedia[0], shared)
+	f.addFace(t, f.bobMedia[0], shared)
+	f.addFace(t, f.bobMedia[1], bobOnly)
+	f.addFace(t, f.bobMedia[0], labeled)
+
+	ids := func(t *testing.T, user *models.User) []int {
+		t.Helper()
+		groups, err := face_detection.UnlabeledFaceGroups(f.db, user)
+		require.NoError(t, err)
+		got := make([]int, len(groups))
+		for i, group := range groups {
+			got[i] = group.ID
+		}
+		return got
+	}
+
+	assert.ElementsMatch(t, []int{shared.ID, bobOnly.ID}, ids(t, admin))
+	assert.ElementsMatch(t, []int{shared.ID}, ids(t, f.alice))
+	assert.ElementsMatch(t, []int{shared.ID, bobOnly.ID}, ids(t, f.bob))
+	assert.NotContains(t, ids(t, admin), labeled.ID)
+}
+
+// A large move must not bind the face ID list twice in one statement.
+func TestDoesFaceGroupContainImagesBatchesFaceIDs(t *testing.T) {
+	f := setupTwoTenantFixtures(t)
+	dest := f.addFaceGroup(t, nil)
+	source := f.addFaceGroup(t, nil)
+	first := f.addFace(t, f.aliceMedia[0], source)
+	second := f.addFace(t, f.aliceMedia[0], source)
+
+	ids := make([]int, imageFaceLookupBatchSize+1)
+	for i := range ids {
+		ids[i] = 100000 + i
+	}
+	ids[0] = first.ID
+	ids[len(ids)-1] = second.ID
+
+	var maxVars int
+	var statements int
+	const callbackName = "test:move-face-params"
+	_ = f.db.Callback().Query().Remove(callbackName)
+	require.NoError(t, f.db.Callback().Query().After("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		statements++
+		if len(tx.Statement.Vars) > maxVars {
+			maxVars = len(tx.Statement.Vars)
+		}
+	}))
+	t.Cleanup(func() { _ = f.db.Callback().Query().Remove(callbackName) })
+
+	duplicate, err := doesFaceGroupContainImages(f.db, dest.ID, ids)
+	require.NoError(t, err)
+	assert.True(t, duplicate, "two faces of the same media in different batches are still a duplicate")
+	assert.GreaterOrEqual(t, statements, 2, "the face ID list is loaded in more than one statement")
+	assert.LessOrEqual(t, maxVars, imageFaceLookupBatchSize)
+
+	other := f.addFace(t, f.aliceMedia[1], source)
+	ids[len(ids)-1] = other.ID
+	duplicate, err = doesFaceGroupContainImages(f.db, dest.ID, ids)
+	require.NoError(t, err)
+	assert.False(t, duplicate)
 }

@@ -224,17 +224,7 @@ func (fd *faceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 	newDescriptors := make([]face.Descriptor, 0)
 	newImageFaceIDs := make([]int, 0)
 
-	var unlabeledFaceGroups []*models.FaceGroup
-
-	err := tx.
-		Joins("JOIN image_faces ON image_faces.face_group_id = face_groups.id").
-		Joins("JOIN media ON image_faces.media_id = media.id").
-		Where("face_groups.label IS NULL").
-		Where("media.album_id IN (?)",
-			tx.Select("album_id").Table("user_albums").Where("user_id = ?", user.ID),
-		).
-		Find(&unlabeledFaceGroups).Error
-
+	unlabeledFaceGroups, err := UnlabeledFaceGroups(tx, user)
 	if err != nil {
 		return nil, err
 	}

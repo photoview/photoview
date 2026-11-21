@@ -236,6 +236,45 @@ func TestAlbumMembershipChangeIsVisibleOnTheNextOperation(t *testing.T) {
 	assert.Nil(t, got)
 }
 
+// media, mediaList and the timeline used to require a user_albums row.
+// Administrators see another user's media. A regular user still does not.
+func TestMediaQueriesAllowAdministratorWithoutAlbumMembership(t *testing.T) {
+	f := setupTwoTenantFixtures(t)
+	password := "1234"
+	admin, err := models.RegisterUser(f.db, "admin", &password, true)
+	require.NoError(t, err)
+	query := &queryResolver{f.resolver}
+
+	media, err := query.Media(f.ctxFor(admin), f.bobMedia[0].ID, nil)
+	require.NoError(t, err)
+	require.NotNil(t, media)
+	assert.Equal(t, f.bobMedia[0].ID, media.ID)
+
+	media, err = query.Media(f.ctxFor(f.alice), f.bobMedia[0].ID, nil)
+	assert.Error(t, err)
+	assert.Nil(t, media)
+
+	list, err := query.MediaList(f.ctxFor(admin), []int{f.aliceMedia[0].ID, f.bobMedia[0].ID})
+	require.NoError(t, err)
+	assert.Len(t, list, 2)
+
+	list, err = query.MediaList(f.ctxFor(f.alice), []int{f.aliceMedia[0].ID, f.bobMedia[0].ID})
+	require.NoError(t, err)
+	require.Len(t, list, 1)
+	assert.Equal(t, f.aliceMedia[0].ID, list[0].ID)
+
+	timeline, err := query.MyTimeline(f.ctxFor(admin), nil, nil, nil)
+	require.NoError(t, err)
+	assert.Len(t, timeline, 4)
+
+	timeline, err = query.MyTimeline(f.ctxFor(f.alice), nil, nil, nil)
+	require.NoError(t, err)
+	require.Len(t, timeline, 2)
+	for _, item := range timeline {
+		assert.Equal(t, f.aliceMedia[0].AlbumID, item.AlbumID)
+	}
+}
+
 // Face groups carry the names users gave to the people in their photos, so the
 // faces of a media item are only listed to the owner of its album.
 func TestMediaFacesOnlyVisibleToAlbumOwner(t *testing.T) {

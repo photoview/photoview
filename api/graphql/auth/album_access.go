@@ -19,7 +19,14 @@ type albumAccessContextKey struct{}
 
 type albumAccessCache struct {
 	mu     sync.Mutex
-	byUser map[int]map[int]struct{}
+	byUser map[int]albumMembership
+}
+
+// albumMembership is the album set for one user during one operation.
+// ids is sorted once and then reused. Callers must not modify it.
+type albumMembership struct {
+	set map[int]struct{}
+	ids []int
 }
 
 // WithAlbumAccessCache returns a child context with an empty membership cache.
@@ -40,58 +47,65 @@ func UserOwnsMedia(ctx context.Context, db *gorm.DB, user *models.User, media *m
 }
 
 func (cache *albumAccessCache) owns(db *gorm.DB, user *models.User, media *models.Media) (bool, error) {
-	ids, err := cache.albumIDs(db, user)
+	membership, err := cache.membership(db, user)
 	if err != nil {
 		return false, err
 	}
 
-	_, owned := ids[media.AlbumID]
+	_, owned := membership.set[media.AlbumID]
 	return owned, nil
 }
 
 // UserAlbumIDs returns the albums the user currently belongs to.
-// Inside one WithAlbumAccessCache context the membership is loaded once.
+// Inside one WithAlbumAccessCache context the membership is loaded once and the
+// same sorted slice is returned on every call. Callers must not modify it.
 // A context without that cache reads user_albums directly. The IDs are never
 // taken from User.Albums, which a websocket connection keeps across operations.
 func UserAlbumIDs(ctx context.Context, db *gorm.DB, user *models.User) ([]int, error) {
-	var set map[int]struct{}
-	var err error
 	if cache, ok := ctx.Value(albumAccessContextKey{}).(*albumAccessCache); ok && cache != nil {
-		set, err = cache.albumIDs(db, user)
-	} else {
-		set, err = loadUserAlbumIDs(db, user.ID)
+		membership, err := cache.membership(db, user)
+		if err != nil {
+			return nil, err
+		}
+		return membership.ids, nil
 	}
+
+	set, err := loadUserAlbumIDs(db, user.ID)
 	if err != nil {
 		return nil, err
 	}
+	return sortedAlbumIDs(set), nil
+}
 
+func (cache *albumAccessCache) membership(db *gorm.DB, user *models.User) (albumMembership, error) {
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+
+	if cache.byUser == nil {
+		cache.byUser = make(map[int]albumMembership)
+	}
+
+	membership, ok := cache.byUser[user.ID]
+	if ok {
+		return membership, nil
+	}
+
+	loaded, err := loadUserAlbumIDs(db, user.ID)
+	if err != nil {
+		return albumMembership{}, err
+	}
+	membership = albumMembership{set: loaded, ids: sortedAlbumIDs(loaded)}
+	cache.byUser[user.ID] = membership
+	return membership, nil
+}
+
+func sortedAlbumIDs(set map[int]struct{}) []int {
 	ids := make([]int, 0, len(set))
 	for id := range set {
 		ids = append(ids, id)
 	}
 	sort.Ints(ids)
-	return ids, nil
-}
-
-func (cache *albumAccessCache) albumIDs(db *gorm.DB, user *models.User) (map[int]struct{}, error) {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
-
-	if cache.byUser == nil {
-		cache.byUser = make(map[int]map[int]struct{})
-	}
-
-	ids, ok := cache.byUser[user.ID]
-	if ok {
-		return ids, nil
-	}
-
-	loaded, err := loadUserAlbumIDs(db, user.ID)
-	if err != nil {
-		return nil, err
-	}
-	cache.byUser[user.ID] = loaded
-	return loaded, nil
+	return ids
 }
 
 func loadUserAlbumIDs(db *gorm.DB, userID int) (map[int]struct{}, error) {

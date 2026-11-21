@@ -229,15 +229,22 @@ func (r *queryResolver) Media(ctx context.Context, id int, tokenCredentials *mod
 		return nil, auth.ErrUnauthorized
 	}
 
-	var media models.Media
-
-	err := db.
+	// The schema allows an administrator to read any media. A regular user still
+	// needs a user_albums row for the media's album. Membership is a subquery,
+	// so the statement does not bind one parameter per album.
+	query := db.
 		Joins("Album").
 		Where("media.id = ?", id).
-		Where("EXISTS (SELECT * FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)",
-			user.ID).
-		Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id")).
-		First(&media).Error
+		Where("media.id IN (?)", db.Model(&models.MediaURL{}).Select("media_id").Where("media_urls.media_id = media.id"))
+	if !user.Admin {
+		query = query.Where(
+			"EXISTS (SELECT 1 FROM user_albums WHERE user_albums.album_id = media.album_id AND user_albums.user_id = ?)",
+			user.ID,
+		)
+	}
+
+	var media models.Media
+	err := query.First(&media).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("could not get media by media_id and user_id from database: %w", err)
@@ -258,12 +265,17 @@ func (r *queryResolver) MediaList(ctx context.Context, ids []int) ([]*models.Med
 		return nil, fmt.Errorf("no ids provided")
 	}
 
+	// Administrators receive every requested media item. Other users only receive
+	// items in albums they own.
+	query := db.Where("media.id IN ?", ids)
+	if !user.Admin {
+		query = query.
+			Joins("JOIN user_albums ON user_albums.album_id = media.album_id").
+			Where("user_albums.user_id = ?", user.ID)
+	}
+
 	var media []*models.Media
-	err := db.Model(&media).
-		Joins("LEFT JOIN user_albums ON user_albums.album_id = media.album_id").
-		Where("media.id IN ?", ids).
-		Where("user_albums.user_id = ?", user.ID).
-		Find(&media).Error
+	err := query.Find(&media).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("could not get media list by media_id and user_id from database: %w", err)
