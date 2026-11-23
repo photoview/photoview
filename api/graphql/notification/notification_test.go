@@ -1,6 +1,8 @@
 package notification
 
 import (
+	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -144,4 +146,104 @@ func TestBroadcastExitsWhenDeregisteredListenerChannelIsFull(t *testing.T) {
 	default:
 		t.Fatal("retired listener lost its buffered notification")
 	}
+}
+
+// TestDeregisterWhileBroadcastSendIsBlocked removes a listener only after
+// broadcast is parked in its send select. The predecessor receive orders the
+// test behind that listener; the stack shows the send is blocked. A timeout
+// fails the test if deregister does not wake it.
+func TestDeregisterWhileBroadcastSendIsBlocked(t *testing.T) {
+	resetNotificationListeners(t)
+
+	user := models.User{Username: "alice"}
+
+	passedCh := make(chan *models.Notification, 1)
+	blockedCh := make(chan *models.Notification, 1)
+	blockedCh <- &models.Notification{Key: "occupied"}
+	laterCh := make(chan *models.Notification, 1)
+
+	passedID := RegisterListener(&user, passedCh)
+	blockedID := RegisterListener(&user, blockedCh)
+	laterID := RegisterListener(&user, laterCh)
+	t.Cleanup(func() {
+		_ = DeregisterListener(passedID)
+		_ = DeregisterListener(blockedID)
+		_ = DeregisterListener(laterID)
+	})
+
+	finished := make(chan struct{})
+	go func() {
+		BroadcastNotification(&models.Notification{Key: "live"})
+		close(finished)
+	}()
+
+	select {
+	case got := <-passedCh:
+		require.Equal(t, "live", got.Key)
+	case <-time.After(2 * time.Second):
+		t.Fatal("broadcast did not reach the listener before the blocked one")
+	}
+
+	waitUntilBroadcastSelectBlocked(t, 2*time.Second)
+
+	select {
+	case <-finished:
+		t.Fatal("broadcast returned while the send was still blocked")
+	default:
+	}
+
+	require.NoError(t, DeregisterListener(blockedID))
+
+	select {
+	case <-finished:
+	case <-time.After(2 * time.Second):
+		t.Fatal("broadcast stayed blocked after the listener was deregistered")
+	}
+
+	select {
+	case got := <-laterCh:
+		require.Equal(t, "live", got.Key)
+	default:
+		t.Fatal("later listener received nothing")
+	}
+
+	select {
+	case got := <-blockedCh:
+		require.Equal(t, "occupied", got.Key)
+	default:
+		t.Fatal("blocked listener lost its buffered notification")
+	}
+}
+
+// waitUntilBroadcastSelectBlocked returns once a broadcast goroutine is parked
+// in select. Yielding observes that park; the deadline only bounds failure.
+func waitUntilBroadcastSelectBlocked(t *testing.T, timeout time.Duration) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	buf := make([]byte, 1<<20)
+	for {
+		n := runtime.Stack(buf, true)
+		if broadcastParkedInSelect(buf[:n]) {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("broadcast send did not block in select:\n%s", buf[:n])
+		}
+		runtime.Gosched()
+	}
+}
+
+func broadcastParkedInSelect(stack []byte) bool {
+	for _, g := range strings.Split(string(stack), "\n\n") {
+		header, rest, ok := strings.Cut(g, "\n")
+		if !ok || !strings.Contains(header, "[select]") {
+			continue
+		}
+		if strings.Contains(rest, "notification.broadcast(") ||
+			strings.Contains(rest, "notification.BroadcastNotification(") ||
+			strings.Contains(rest, "notification.BroadcastAlbumNotification(") {
+			return true
+		}
+	}
+	return false
 }
