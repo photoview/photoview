@@ -277,7 +277,7 @@ func (fd *faceDetector) RecognizeUnlabeledFaces(tx *gorm.DB, user *models.User) 
 		} else {
 			// found new match, update the database
 			var imageFace models.ImageFace
-			if err := tx.Model(&models.ImageFace{}).First(imageFace, imageFaceID).Error; err != nil {
+			if err := tx.Model(&models.ImageFace{}).First(&imageFace, imageFaceID).Error; err != nil {
 				return nil, err
 			}
 

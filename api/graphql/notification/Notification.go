@@ -14,6 +14,10 @@ type NotificationListener struct {
 	listenerID int
 	user       models.User
 	channel    NotificationChannel
+	// done is closed when the listener is deregistered. A broadcast that already
+	// copied the listener selects on it so a send to a full channel can exit.
+	done     chan struct{}
+	doneOnce sync.Once
 	// allow reports whether this listener may receive a notification for an
 	// album. Nil allows every notification. The check runs when the notification
 	// is sent, so a websocket subscription can stop receiving an album after
@@ -27,7 +31,15 @@ func NewListener(user models.User, channel NotificationChannel) *NotificationLis
 		listenerID: nextNotificationId,
 		user:       user,
 		channel:    channel,
+		done:       make(chan struct{}),
 	}
+}
+
+// retire closes done exactly once so a repeated deregister cannot panic.
+func (l *NotificationListener) retire() {
+	l.doneOnce.Do(func() {
+		close(l.done)
+	})
 }
 
 var notificationListeners []*NotificationListener = make([]*NotificationListener, 0)
@@ -67,6 +79,7 @@ func DeregisterListener(listenerID int) error {
 		log.Println("Deregistering notification listener")
 
 		if listener.listenerID == listenerID {
+			listener.retire()
 
 			if len(notificationListeners) > 1 {
 				lastIndex := len(notificationListeners) - 1
@@ -108,6 +121,9 @@ func broadcast(note *models.Notification, albumID int) {
 		if albumID != 0 && listener.allow != nil && !listener.allow(albumID) {
 			continue
 		}
-		listener.channel <- note
+		select {
+		case listener.channel <- note:
+		case <-listener.done:
+		}
 	}
 }
