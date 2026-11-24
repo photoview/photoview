@@ -1,6 +1,7 @@
 package scanner_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
 	"github.com/photoview/photoview/api/test_utils"
 	scanner_utils "github.com/photoview/photoview/api/test_utils/scanner"
+	"gorm.io/gorm"
 )
 
 func TestMain(m *testing.M) {
@@ -307,6 +309,72 @@ func TestFullScan(t *testing.T) {
 		}
 		if !found {
 			t.Errorf("the missing face %v was not saved again, faces are %v", face.Rectangle, after)
+		}
+	})
+
+	t.Run("DetectFacesAfterSaveErrorSavesTheFace", func(t *testing.T) {
+		if face_detection.GlobalFaceDetector == nil {
+			t.Skip("face detection is not available")
+		}
+
+		var face models.ImageFace
+		if err := db.First(&face).Error; err != nil {
+			t.Fatal("get an image face error:", err)
+		}
+
+		countFace := func() int64 {
+			var count int64
+			if err := db.Model(&models.ImageFace{}).
+				Where("media_id = ? AND rectangle = ?", face.MediaID, face.Rectangle).
+				Count(&count).Error; err != nil {
+				t.Fatal("count image faces error:", err)
+			}
+			return count
+		}
+
+		if err := db.Delete(&face).Error; err != nil {
+			t.Fatal("delete image face error:", err)
+		}
+
+		// Saving a face fails once, as a database error would.
+		errSave := errors.New("injected save error")
+		const callback = "test:fail_image_face_create"
+		if err := db.Callback().Create().Before("gorm:create").Register(callback, func(tx *gorm.DB) {
+			if tx.Statement.Table == "image_faces" {
+				tx.AddError(errSave)
+			}
+		}); err != nil {
+			t.Fatal("register callback error:", err)
+		}
+		removeCallback := func() {
+			if err := db.Callback().Create().Remove(callback); err != nil {
+				t.Fatal("remove callback error:", err)
+			}
+		}
+		removed := false
+		t.Cleanup(func() {
+			if !removed {
+				removeCallback()
+			}
+		})
+
+		media := models.Media{Model: models.Model{ID: face.MediaID}}
+		if err := face_detection.GlobalFaceDetector.DetectFaces(db, &media); !errors.Is(err, errSave) {
+			t.Fatalf("detect faces with a failing save error = %v, want %v", err, errSave)
+		}
+		if got := countFace(); got != 0 {
+			t.Fatalf("faces at %v after a failed save = %d, want 0", face.Rectangle, got)
+		}
+
+		removeCallback()
+		removed = true
+
+		media = models.Media{Model: models.Model{ID: face.MediaID}}
+		if err := face_detection.GlobalFaceDetector.DetectFaces(db, &media); err != nil {
+			t.Fatal("detect faces again error:", err)
+		}
+		if got := countFace(); got != 1 {
+			t.Errorf("faces at %v after detecting again = %d, want 1", face.Rectangle, got)
 		}
 	})
 
