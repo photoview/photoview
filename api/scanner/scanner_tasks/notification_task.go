@@ -30,7 +30,7 @@ func NewNotificationTask() NotificationTask {
 func (t NotificationTask) AfterMediaFound(ctx scanner_task.TaskContext, media *models.Media, newMedia bool) error {
 	if newMedia {
 		t.throttle.Trigger(func() {
-			notification.BroadcastNotification(&models.Notification{
+			notification.BroadcastAlbumNotification(ctx.GetAlbum().ID, &models.Notification{
 				Key:     t.albumKey,
 				Type:    models.NotificationTypeMessage,
 				Header:  fmt.Sprintf("Found new media in album '%s'", ctx.GetAlbum().Title),
@@ -47,7 +47,7 @@ func (t NotificationTask) AfterProcessMedia(ctx scanner_task.TaskContext, mediaD
 
 	if len(updatedURLs) > 0 {
 		progress := float64(mediaIndex) / float64(mediaTotal) * 100.0
-		notification.BroadcastNotification(&models.Notification{
+		notification.BroadcastAlbumNotification(ctx.GetAlbum().ID, &models.Notification{
 			Key:      t.albumKey,
 			Type:     models.NotificationTypeProgress,
 			Header:   fmt.Sprintf("Processing media for album '%s'", ctx.GetAlbum().Title),
@@ -64,7 +64,7 @@ func (t NotificationTask) AfterScanAlbum(ctx scanner_task.TaskContext, changedMe
 
 	if len(changedMedia) > 0 {
 		timeoutDelay := 2000
-		notification.BroadcastNotification(&models.Notification{
+		notification.BroadcastAlbumNotification(ctx.GetAlbum().ID, &models.Notification{
 			Key:      t.albumKey,
 			Type:     models.NotificationTypeMessage,
 			Positive: true,

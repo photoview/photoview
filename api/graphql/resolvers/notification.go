@@ -23,7 +23,22 @@ func (r *subscriptionResolver) Notification(ctx context.Context) (<-chan *models
 
 	notificationChannel := make(chan *models.Notification, 1)
 
-	listenerID := notification.RegisterListener(user, notificationChannel)
+	// Re-check album membership when an event is sent. The subscription is one
+	// long-lived operation, so a cache taken at subscribe time would keep
+	// delivering after access is revoked on this connection.
+	userID := user.ID
+	admin := user.Admin
+	db := r.database
+	listenerID := notification.RegisterListenerWithAlbumAccess(user, notificationChannel, func(albumID int) bool {
+		if admin {
+			return true
+		}
+		var count int64
+		err := db.Table("user_albums").
+			Where("user_id = ? AND album_id = ?", userID, albumID).
+			Count(&count).Error
+		return err == nil && count > 0
+	})
 
 	go func() {
 		<-ctx.Done()
