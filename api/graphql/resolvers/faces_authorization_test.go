@@ -44,6 +44,42 @@ func TestUserOwnedFaceGroupRequiresOwnedImage(t *testing.T) {
 	assert.Nil(t, got)
 }
 
+// FaceGroup used to answer a missing or unowned id with a zero group and no
+// error. Callers must get the same not-found error as the face-group mutations.
+func TestFaceGroupRejectsMissingAndUnownedGroups(t *testing.T) {
+	useStubFaceDetector(t)
+	f := setupTwoTenantFixtures(t)
+
+	own := f.addFaceGroup(t, nil)
+	foreign := f.addFaceGroup(t, nil)
+	f.addFace(t, f.aliceMedia[0], own)
+	f.addFace(t, f.bobMedia[0], foreign)
+
+	query := &queryResolver{f.resolver}
+	const missingMessage = "face group does not exist or is not owned by the user"
+
+	t.Run("owned group", func(t *testing.T) {
+		got, err := query.FaceGroup(f.ctxFor(f.alice), own.ID)
+		require.NoError(t, err)
+		require.NotNil(t, got)
+		assert.Equal(t, own.ID, got.ID)
+	})
+
+	t.Run("missing id", func(t *testing.T) {
+		got, err := query.FaceGroup(f.ctxFor(f.alice), own.ID+foreign.ID+1000)
+		require.EqualError(t, err, missingMessage+": "+gorm.ErrRecordNotFound.Error())
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		assert.Nil(t, got)
+	})
+
+	t.Run("unowned group", func(t *testing.T) {
+		got, err := query.FaceGroup(f.ctxFor(f.alice), foreign.ID)
+		require.EqualError(t, err, missingMessage+": "+gorm.ErrRecordNotFound.Error())
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		assert.Nil(t, got)
+	})
+}
+
 // The face group mutations act on the IDs of the request, so they must stop at
 // face groups of other users.
 func TestFaceGroupMutationsRejectForeignFaceGroups(t *testing.T) {
@@ -345,9 +381,9 @@ func TestFaceGroupPathsRefreshMembershipAfterRevocation(t *testing.T) {
 	assert.Empty(t, groups)
 
 	gotGroup, err = (&queryResolver{f.resolver}).FaceGroup(next, group.ID)
-	require.NoError(t, err)
-	require.NotNil(t, gotGroup)
-	assert.NotEqual(t, group.ID, gotGroup.ID)
+	assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	assert.ErrorContains(t, err, "face group does not exist or is not owned by the user")
+	assert.Nil(t, gotGroup)
 
 	label := "revoked"
 	_, err = (&mutationResolver{f.resolver}).SetFaceGroupLabel(next, group.ID, &label)
@@ -398,10 +434,13 @@ func TestFaceGroupQueriesAllowAdministratorWithoutAlbumMembership(t *testing.T) 
 			}
 
 			got, err := (&queryResolver{f.resolver}).FaceGroup(ctx, group.ID)
-			require.NoError(t, err)
 			if tt.faces == 0 {
-				assert.NotEqual(t, group.ID, got.ID)
+				require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+				assert.ErrorContains(t, err, "face group does not exist or is not owned by the user")
+				assert.Nil(t, got)
 			} else {
+				require.NoError(t, err)
+				require.NotNil(t, got)
 				assert.Equal(t, group.ID, got.ID)
 			}
 

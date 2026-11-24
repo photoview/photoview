@@ -21,6 +21,10 @@ const userOwnsImageFace = "EXISTS (SELECT 1 FROM media AS owned_media " +
 
 var ErrFaceDetectorNotInitialized = errors.New("face detector not initialized")
 
+func faceGroupDoesNotExistOrUnowned(err error) error {
+	return fmt.Errorf("face group does not exist or is not owned by the user: %w", err)
+}
+
 func userOwnedFaceGroup(ctx context.Context, db *gorm.DB, user *models.User, faceGroupID int) (*models.FaceGroup, error) {
 	if user.Admin {
 		var faceGroup models.FaceGroup
@@ -47,7 +51,7 @@ func userOwnedFaceGroup(ctx context.Context, db *gorm.DB, user *models.User, fac
 	var faceGroup models.FaceGroup
 	if err := faceGroupQuery.Take(&faceGroup).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("face group does not exist or is not owned by the user: %w", err)
+			return nil, faceGroupDoesNotExistOrUnowned(err)
 		}
 		return nil, err
 	}

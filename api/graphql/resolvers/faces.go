@@ -457,7 +457,10 @@ func (r *queryResolver) FaceGroup(ctx context.Context, id int) (*models.FaceGrou
 	}
 
 	var faceGroup models.FaceGroup
-	if err := faceGroupQuery.Limit(1).Find(&faceGroup).Error; err != nil {
+	if err := faceGroupQuery.Take(&faceGroup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, faceGroupDoesNotExistOrUnowned(err)
+		}
 		return nil, err
 	}
 
