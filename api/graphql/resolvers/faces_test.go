@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -88,6 +89,37 @@ func setupNonAdminUserWithAlbum(t *testing.T, r *mutationResolver) (*models.User
 	}
 
 	return user, auth.AddUserToContext(context.Background(), user)
+}
+
+// recordingFaceDetector wraps the real detector and records how a resolver
+// asks it to regroup faces, since its own state is not visible from here.
+type recordingFaceDetector struct {
+	face_detection.FaceDetector
+	mergedCategories [][2]int32
+	mergedImageFaces map[int32][]int
+}
+
+func (d *recordingFaceDetector) MergeCategories(sourceID int32, destID int32) {
+	d.mergedCategories = append(d.mergedCategories, [2]int32{sourceID, destID})
+	d.FaceDetector.MergeCategories(sourceID, destID)
+}
+
+func (d *recordingFaceDetector) MergeImageFaces(imageFaceIDs []int, destFaceGroupID int32) {
+	if d.mergedImageFaces == nil {
+		d.mergedImageFaces = map[int32][]int{}
+	}
+	d.mergedImageFaces[destFaceGroupID] = append(d.mergedImageFaces[destFaceGroupID], imageFaceIDs...)
+	d.FaceDetector.MergeImageFaces(imageFaceIDs, destFaceGroupID)
+}
+
+func recordFaceDetector(t *testing.T) *recordingFaceDetector {
+	t.Helper()
+
+	recorder := &recordingFaceDetector{FaceDetector: face_detection.GlobalFaceDetector}
+	face_detection.GlobalFaceDetector = recorder
+	t.Cleanup(func() { face_detection.GlobalFaceDetector = recorder.FaceDetector })
+
+	return recorder
 }
 
 func TestCombineFaceGroups(t *testing.T) {
@@ -211,6 +243,36 @@ func TestCombineFaceGroups(t *testing.T) {
 		}
 		if len(imageFaces) != 4 {
 			t.Fatalf("expected 4 image faces after non-admin merge, got %d", len(imageFaces))
+		}
+	})
+
+	t.Run("moves the merged groups over in the recognizer too", func(t *testing.T) {
+		r, ctx, _ := setupFaceMutationTest(t)
+		createFaceMutationFixtures(t, r)
+		recorder := recordFaceDetector(t)
+
+		testDataList := []models.ImageFace{
+			{Model: models.Model{ID: 1}, FaceGroupID: 1, MediaID: 1},
+			{Model: models.Model{ID: 2}, FaceGroupID: 2, MediaID: 2},
+			{Model: models.Model{ID: 3}, FaceGroupID: 3, MediaID: 3},
+		}
+		if err := r.database.Create(&testDataList).Error; err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := r.CombineFaceGroups(ctx, 1, []int{2, 3}); err != nil {
+			t.Fatal("CombineFaceGroups failed:", err)
+		}
+
+		// The source IDs are face group IDs. Handing them to MergeImageFaces,
+		// which takes image face IDs, would regroup whichever faces happen to
+		// have those IDs and leave the merged ones on the deleted groups.
+		want := [][2]int32{{2, 1}, {3, 1}}
+		if fmt.Sprint(recorder.mergedCategories) != fmt.Sprint(want) {
+			t.Fatalf("expected the recognizer to merge groups %v, got %v", want, recorder.mergedCategories)
+		}
+		if len(recorder.mergedImageFaces) != 0 {
+			t.Fatalf("expected no image faces to be regrouped one by one, got %v", recorder.mergedImageFaces)
 		}
 	})
 }

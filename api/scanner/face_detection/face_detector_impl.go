@@ -197,6 +197,10 @@ func (fd *faceDetector) MergeCategories(sourceID int32, destID int32) {
 			fd.faceGroupIDs[i] = destID
 		}
 	}
+
+	// go-face copies the samples when they are set and classifies against
+	// that copy, so it has to be handed the new group IDs as well.
+	fd.rec.SetSamples(fd.faceDescriptors, fd.faceGroupIDs)
 }
 
 func (fd *faceDetector) MergeImageFaces(imageFaceIDs []int, destFaceGroupID int32) {
