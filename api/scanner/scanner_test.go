@@ -250,6 +250,66 @@ func TestFullScan(t *testing.T) {
 		}
 	})
 
+	t.Run("DetectFacesAgainSavesMissingFaces", func(t *testing.T) {
+		if face_detection.GlobalFaceDetector == nil {
+			t.Skip("face detection is not available")
+		}
+
+		var face models.ImageFace
+		if err := db.First(&face).Error; err != nil {
+			t.Fatal("get an image face error:", err)
+		}
+
+		rectanglesOf := func() []models.FaceRectangle {
+			var faces []models.ImageFace
+			if err := db.Where("media_id = ?", face.MediaID).Order("id").Find(&faces).Error; err != nil {
+				t.Fatal("get image faces error:", err)
+			}
+			rectangles := make([]models.FaceRectangle, len(faces))
+			for i, f := range faces {
+				rectangles[i] = f.Rectangle
+			}
+			return rectangles
+		}
+
+		// As if an earlier detection had saved one face of the photo and failed
+		// to save this one: another face stays (a rectangle detection does not
+		// find), this one goes.
+		saved := models.ImageFace{
+			FaceGroupID: face.FaceGroupID,
+			MediaID:     face.MediaID,
+			Descriptor:  face.Descriptor,
+			Rectangle:   models.FaceRectangle{MinX: 0.9, MaxX: 0.95, MinY: 0.9, MaxY: 0.95},
+		}
+		if err := db.Create(&saved).Error; err != nil {
+			t.Fatal("create image face error:", err)
+		}
+		t.Cleanup(func() { db.Delete(&saved) })
+		before := rectanglesOf()
+		if err := db.Delete(&face).Error; err != nil {
+			t.Fatal("delete image face error:", err)
+		}
+
+		media := models.Media{Model: models.Model{ID: face.MediaID}}
+		if err := face_detection.GlobalFaceDetector.DetectFaces(db, &media); err != nil {
+			t.Fatal("detect faces again error:", err)
+		}
+
+		after := rectanglesOf()
+		if len(after) != len(before) {
+			t.Fatalf("faces of media %d after detecting again = %d, want %d", face.MediaID, len(after), len(before))
+		}
+		found := false
+		for _, rectangle := range after {
+			if rectangle == face.Rectangle {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("the missing face %v was not saved again, faces are %v", face.Rectangle, after)
+		}
+	})
+
 	t.Run("CheckPhotosOrientation", func(t *testing.T) {
 		photoFiles := []string{
 			"left_arrow_normal_web.jpg",
