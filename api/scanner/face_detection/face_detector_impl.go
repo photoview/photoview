@@ -112,29 +112,52 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 		return err
 	}
 
+	// The lock is held until the faces are saved, so two detections of the
+	// same photo, such as a scan and a request that rebuilds its thumbnail,
+	// cannot both find a face unsaved and save it twice.
 	fd.mutex.Lock()
-	faces, err := fd.rec.RecognizeFile(thumbnailPath)
-	fd.mutex.Unlock()
+	defer fd.mutex.Unlock()
 
+	faces, err := fd.rec.RecognizeFile(thumbnailPath)
 	if err != nil {
 		return errors.Wrap(err, "error read faces")
 	}
 
-	for _, face := range faces {
-		fd.classifyFace(db, &face, media, thumbnailPath)
+	// A rescan that rebuilds the thumbnails calls this again for the same
+	// photo. A face the photo has already is not added a second time; deleting
+	// the old faces first would throw away how the user sorted them. Detection
+	// on the same thumbnail finds the same rectangle, so the saved rectangle
+	// identifies a face. Faces that an earlier run failed to save are still
+	// added.
+	var savedRectangles []string
+	if err := db.Model(&models.ImageFace{}).Where("media_id = ?", media.ID).Pluck("rectangle", &savedRectangles).Error; err != nil {
+		return err
+	}
+	saved := make(map[string]bool, len(savedRectangles))
+	for _, rectangle := range savedRectangles {
+		saved[rectangle] = true
 	}
 
-	return nil
+	// A face that fails to save does not stop the others; the next detection
+	// on this photo tries it again.
+	var saveErr error
+	for _, face := range faces {
+		if err := fd.classifyFace(db, &face, media, thumbnailPath, saved); err != nil && saveErr == nil {
+			saveErr = errors.Wrap(err, "error saving face")
+		}
+	}
+
+	return saveErr
 }
 
 func (fd *faceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
 	return int32(fd.rec.ClassifyThreshold(descriptor, 0.2))
 }
 
-func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string) error {
-	fd.mutex.Lock()
-	defer fd.mutex.Unlock()
-
+// classifyFace saves a detected face in the group it matches, or in a new one.
+// A face whose rectangle is in saved is on the photo already and is skipped.
+// The caller holds fd.mutex.
+func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string, saved map[string]bool) error {
 	match := fd.classifyDescriptor(face.Descriptor)
 
 	dimension, err := media_encoding.GetPhotoDimensions(imagePath)
@@ -152,6 +175,12 @@ func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models
 			MinY: float64(face.Rectangle.Min.Y) / float64(dimension.Height),
 			MaxY: float64(face.Rectangle.Max.Y) / float64(dimension.Height),
 		},
+	}
+
+	// Compared in the form it is stored in; Value never fails.
+	rectangle, _ := imageFace.Rectangle.Value()
+	if key, ok := rectangle.(string); ok && saved[key] {
+		return nil
 	}
 
 	var faceGroup models.FaceGroup
