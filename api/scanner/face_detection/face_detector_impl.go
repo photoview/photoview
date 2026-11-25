@@ -94,21 +94,6 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 		return err
 	}
 
-	// A rescan that rebuilds the thumbnails calls this again for the same
-	// photo. A face the photo has already is not added a second time; deleting
-	// the old faces first would throw away how the user sorted them. Detection
-	// on the same thumbnail finds the same rectangle, so the saved rectangle
-	// identifies a face. Faces that an earlier run failed to save are still
-	// added.
-	var savedRectangles []string
-	if err := db.Model(&models.ImageFace{}).Where("media_id = ?", media.ID).Pluck("rectangle", &savedRectangles).Error; err != nil {
-		return err
-	}
-	saved := make(map[string]bool, len(savedRectangles))
-	for _, rectangle := range savedRectangles {
-		saved[rectangle] = true
-	}
-
 	var thumbnailURL *models.MediaURL
 	for _, url := range media.MediaURL {
 		if url.Purpose == models.PhotoThumbnail {
@@ -127,12 +112,30 @@ func (fd *faceDetector) DetectFaces(db *gorm.DB, media *models.Media) error {
 		return err
 	}
 
+	// The lock is held until the faces are saved, so two detections of the
+	// same photo, such as a scan and a request that rebuilds its thumbnail,
+	// cannot both find a face unsaved and save it twice.
 	fd.mutex.Lock()
-	faces, err := fd.rec.RecognizeFile(thumbnailPath)
-	fd.mutex.Unlock()
+	defer fd.mutex.Unlock()
 
+	faces, err := fd.rec.RecognizeFile(thumbnailPath)
 	if err != nil {
 		return errors.Wrap(err, "error read faces")
+	}
+
+	// A rescan that rebuilds the thumbnails calls this again for the same
+	// photo. A face the photo has already is not added a second time; deleting
+	// the old faces first would throw away how the user sorted them. Detection
+	// on the same thumbnail finds the same rectangle, so the saved rectangle
+	// identifies a face. Faces that an earlier run failed to save are still
+	// added.
+	var savedRectangles []string
+	if err := db.Model(&models.ImageFace{}).Where("media_id = ?", media.ID).Pluck("rectangle", &savedRectangles).Error; err != nil {
+		return err
+	}
+	saved := make(map[string]bool, len(savedRectangles))
+	for _, rectangle := range savedRectangles {
+		saved[rectangle] = true
 	}
 
 	// A face that fails to save does not stop the others; the next detection
@@ -153,10 +156,8 @@ func (fd *faceDetector) classifyDescriptor(descriptor face.Descriptor) int32 {
 
 // classifyFace saves a detected face in the group it matches, or in a new one.
 // A face whose rectangle is in saved is on the photo already and is skipped.
+// The caller holds fd.mutex.
 func (fd *faceDetector) classifyFace(db *gorm.DB, face *face.Face, media *models.Media, imagePath string, saved map[string]bool) error {
-	fd.mutex.Lock()
-	defer fd.mutex.Unlock()
-
 	match := fd.classifyDescriptor(face.Descriptor)
 
 	dimension, err := media_encoding.GetPhotoDimensions(imagePath)

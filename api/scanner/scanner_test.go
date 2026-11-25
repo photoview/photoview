@@ -3,10 +3,14 @@ package scanner_test
 import (
 	"errors"
 	"fmt"
+	"image"
+	"image/draw"
+	"image/jpeg"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -312,69 +316,109 @@ func TestFullScan(t *testing.T) {
 		}
 	})
 
-	t.Run("DetectFacesAfterSaveErrorSavesTheFace", func(t *testing.T) {
+	t.Run("DetectFacesAfterSaveErrorSavesTheOtherFaces", func(t *testing.T) {
 		if face_detection.GlobalFaceDetector == nil {
 			t.Skip("face detection is not available")
 		}
 
-		var face models.ImageFace
-		if err := db.First(&face).Error; err != nil {
-			t.Fatal("get an image face error:", err)
+		// Every test photo shows one face, so the thumbnail of one photo is
+		// replaced by two thumbnails side by side for the length of the test.
+		media := mediaWithTitle(t, db, "boy1.jpg")
+		thumbnailPath := thumbnailPathOf(t, media)
+		original, err := os.ReadFile(thumbnailPath)
+		if err != nil {
+			t.Fatal("read thumbnail error:", err)
 		}
-
-		countFace := func() int64 {
-			var count int64
-			if err := db.Model(&models.ImageFace{}).
-				Where("media_id = ? AND rectangle = ?", face.MediaID, face.Rectangle).
-				Count(&count).Error; err != nil {
-				t.Fatal("count image faces error:", err)
+		writeSideBySide(t, thumbnailPath, thumbnailPath, thumbnailPathOf(t, mediaWithTitle(t, db, "girl_blond1.jpg")))
+		t.Cleanup(func() {
+			if err := os.WriteFile(thumbnailPath, original, 0644); err != nil {
+				t.Error("restore thumbnail error:", err)
 			}
-			return count
-		}
+		})
+		keepFacesOf(t, db, media.ID)
 
-		if err := db.Delete(&face).Error; err != nil {
-			t.Fatal("delete image face error:", err)
-		}
-
-		// Saving a face fails once, as a database error would.
+		// The first face fails to save, as on a database error.
 		errSave := errors.New("injected save error")
-		const callback = "test:fail_image_face_create"
+		const callback = "test:fail_first_image_face_create"
+		creates := 0
 		if err := db.Callback().Create().Before("gorm:create").Register(callback, func(tx *gorm.DB) {
 			if tx.Statement.Table == "image_faces" {
-				tx.AddError(errSave)
+				creates++
+				if creates == 1 {
+					tx.AddError(errSave)
+				}
 			}
 		}); err != nil {
 			t.Fatal("register callback error:", err)
 		}
+		removed := false
 		removeCallback := func() {
+			if removed {
+				return
+			}
+			removed = true
 			if err := db.Callback().Create().Remove(callback); err != nil {
-				t.Fatal("remove callback error:", err)
+				t.Error("remove callback error:", err)
 			}
 		}
-		removed := false
-		t.Cleanup(func() {
-			if !removed {
-				removeCallback()
-			}
-		})
+		t.Cleanup(removeCallback)
 
-		media := models.Media{Model: models.Model{ID: face.MediaID}}
-		if err := face_detection.GlobalFaceDetector.DetectFaces(db, &media); !errors.Is(err, errSave) {
+		detect := func() error {
+			return face_detection.GlobalFaceDetector.DetectFaces(db, &models.Media{Model: models.Model{ID: media.ID}})
+		}
+
+		if err := detect(); !errors.Is(err, errSave) {
 			t.Fatalf("detect faces with a failing save error = %v, want %v", err, errSave)
 		}
-		if got := countFace(); got != 0 {
-			t.Fatalf("faces at %v after a failed save = %d, want 0", face.Rectangle, got)
+		if got := len(rectanglesOfMedia(t, db, media.ID)); got != 1 {
+			t.Fatalf("faces after the first save failed = %d, want 1 (the other face)", got)
 		}
 
 		removeCallback()
-		removed = true
-
-		media = models.Media{Model: models.Model{ID: face.MediaID}}
-		if err := face_detection.GlobalFaceDetector.DetectFaces(db, &media); err != nil {
-			t.Fatal("detect faces again error:", err)
+		for run := 1; run <= 2; run++ {
+			if err := detect(); err != nil {
+				t.Fatalf("detect faces run %d error: %v", run, err)
+			}
+			rectangles := rectanglesOfMedia(t, db, media.ID)
+			if len(rectangles) != 2 || rectangles[0] == rectangles[1] {
+				t.Fatalf("faces after detecting again (run %d) = %v, want two different faces", run, rectangles)
+			}
 		}
-		if got := countFace(); got != 1 {
-			t.Errorf("faces at %v after detecting again = %d, want 1", face.Rectangle, got)
+	})
+
+	t.Run("DetectFacesConcurrentlyAddsNoCopies", func(t *testing.T) {
+		if face_detection.GlobalFaceDetector == nil {
+			t.Skip("face detection is not available")
+		}
+
+		media := mediaWithTitle(t, db, "girl_blond2.jpg")
+		want := len(rectanglesOfMedia(t, db, media.ID))
+		keepFacesOf(t, db, media.ID)
+
+		// Two detections of a photo without saved faces at the same time, as
+		// when a request rebuilds the thumbnail while a scan processes it.
+		start := make(chan struct{})
+		errs := make(chan error, 2)
+		var wg sync.WaitGroup
+		for range 2 {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				<-start
+				errs <- face_detection.GlobalFaceDetector.DetectFaces(db, &models.Media{Model: models.Model{ID: media.ID}})
+			}()
+		}
+		close(start)
+		wg.Wait()
+		close(errs)
+		for err := range errs {
+			if err != nil {
+				t.Fatal("detect faces error:", err)
+			}
+		}
+
+		if got := len(rectanglesOfMedia(t, db, media.ID)); got != want {
+			t.Errorf("faces after two concurrent detections = %d, want %d", got, want)
 		}
 	})
 
@@ -581,4 +625,94 @@ func copyFilelistWithJpgExt(list []string) []string {
 	}
 
 	return ret
+}
+
+func mediaWithTitle(t *testing.T, db *gorm.DB, title string) *models.Media {
+	t.Helper()
+	var media models.Media
+	if err := db.Preload("MediaURL").Where("title = ?", title).First(&media).Error; err != nil {
+		t.Fatalf("get media %q error: %v", title, err)
+	}
+	return &media
+}
+
+func thumbnailPathOf(t *testing.T, media *models.Media) string {
+	t.Helper()
+	thumbnail, err := media.GetThumbnail()
+	if err != nil {
+		t.Fatalf("get thumbnail of media %q error: %v", media.Title, err)
+	}
+	thumbnail.Media = media
+	path, err := thumbnail.CachedPath()
+	if err != nil {
+		t.Fatalf("get thumbnail path of media %q error: %v", media.Title, err)
+	}
+	return path
+}
+
+// writeSideBySide writes the images left and right next to each other to path.
+func writeSideBySide(t *testing.T, path, left, right string) {
+	t.Helper()
+	decode := func(path string) image.Image {
+		file, err := os.Open(path)
+		if err != nil {
+			t.Fatal("open image error:", err)
+		}
+		defer file.Close()
+		img, err := jpeg.Decode(file)
+		if err != nil {
+			t.Fatalf("decode %s error: %v", path, err)
+		}
+		return img
+	}
+	l, r := decode(left), decode(right)
+	width := l.Bounds().Dx() + r.Bounds().Dx()
+	height := max(l.Bounds().Dy(), r.Bounds().Dy())
+	combined := image.NewRGBA(image.Rect(0, 0, width, height))
+	draw.Draw(combined, l.Bounds().Sub(l.Bounds().Min), l, l.Bounds().Min, draw.Src)
+	draw.Draw(combined, r.Bounds().Sub(r.Bounds().Min).Add(image.Pt(l.Bounds().Dx(), 0)), r, r.Bounds().Min, draw.Src)
+
+	file, err := os.Create(path)
+	if err != nil {
+		t.Fatal("create image error:", err)
+	}
+	defer file.Close()
+	if err := jpeg.Encode(file, combined, &jpeg.Options{Quality: 95}); err != nil {
+		t.Fatal("encode image error:", err)
+	}
+}
+
+// keepFacesOf deletes the saved faces of a photo and puts them back after the test.
+func keepFacesOf(t *testing.T, db *gorm.DB, mediaID int) {
+	t.Helper()
+	var faces []models.ImageFace
+	if err := db.Where("media_id = ?", mediaID).Find(&faces).Error; err != nil {
+		t.Fatal("get image faces error:", err)
+	}
+	if err := db.Where("media_id = ?", mediaID).Delete(&models.ImageFace{}).Error; err != nil {
+		t.Fatal("delete image faces error:", err)
+	}
+	t.Cleanup(func() {
+		if err := db.Where("media_id = ?", mediaID).Delete(&models.ImageFace{}).Error; err != nil {
+			t.Error("delete image faces error:", err)
+		}
+		if len(faces) > 0 {
+			if err := db.Create(&faces).Error; err != nil {
+				t.Error("restore image faces error:", err)
+			}
+		}
+	})
+}
+
+func rectanglesOfMedia(t *testing.T, db *gorm.DB, mediaID int) []models.FaceRectangle {
+	t.Helper()
+	var faces []models.ImageFace
+	if err := db.Where("media_id = ?", mediaID).Order("id").Find(&faces).Error; err != nil {
+		t.Fatal("get image faces error:", err)
+	}
+	rectangles := make([]models.FaceRectangle, len(faces))
+	for i, face := range faces {
+		rectangles[i] = face.Rectangle
+	}
+	return rectangles
 }
