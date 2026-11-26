@@ -1,6 +1,7 @@
 package media_type
 
 import (
+	"errors"
 	"strings"
 	"unique"
 
@@ -25,6 +26,12 @@ func GetMediaType(f string) MediaType {
 func mediaType(mime string) MediaType {
 	return MediaType(unique.Make(mime))
 }
+
+// ErrUnknownType marks a file whose media type could not be determined.
+// Wrapping it lets the scanner tell this apart from a database failure: the
+// type of a given file does not change between two attempts, so retrying is
+// only a delay.
+var ErrUnknownType = errors.New("could not determine media type")
 
 var (
 	TypeUnknown MediaType
