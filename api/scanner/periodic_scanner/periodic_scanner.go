@@ -8,6 +8,7 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/log"
 	"github.com/photoview/photoview/api/scanner/scanner_queue"
+	"github.com/photoview/photoview/api/utils"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +35,11 @@ var mainPeriodicScanner *periodicScanner = nil
 var mainPeriodicScannerLocker sync.Mutex
 
 func getPeriodicScanInterval(db *gorm.DB) (time.Duration, error) {
+	if interval, ok := utils.PeriodicScanInterval(); ok {
+		log.Info(nil, "Periodic scan interval set from "+utils.EnvPeriodicScanInterval.GetName())
+		return interval, nil
+	}
+
 	var siteInfo models.SiteInfo
 	if err := db.First(&siteInfo).Error; err != nil {
 		return 0, err
