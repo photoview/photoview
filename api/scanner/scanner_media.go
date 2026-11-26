@@ -82,7 +82,7 @@ func ProcessSingleMedia(ctx context.Context, db *gorm.DB, media *models.Media) e
 		return err
 	}
 
-	mediaData := media_encoding.NewEncodeMediaData(media)
+	mediaData := media_encoding.NewEncodeMediaData(media, albumCache.GetMediaType(media.Path))
 
 	taskContext := scanner_task.NewTaskContext(ctx, db, &album, albumCache)
 	if err := scanMedia(taskContext, media, &mediaData, 0, 1); err != nil {
