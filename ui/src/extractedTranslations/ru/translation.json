@@ -263,6 +263,11 @@
       "title_placeholder": ""
     },
     "download": {
+      "actions": {
+        "download": "",
+        "send": "",
+        "send_again": ""
+      },
       "filesize": {
         "byte_one": "",
         "byte_few": "",
@@ -289,7 +294,8 @@
         "dimensions": "Габариты",
         "file_size": "Размер",
         "file_type": "Тип",
-        "name": "Имя"
+        "name": "Имя",
+        "send": ""
       },
       "title": "Скачать"
     },
