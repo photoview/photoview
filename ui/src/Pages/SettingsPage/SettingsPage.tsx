@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { useIsAdmin } from '../../components/routes/AuthorizedRoute'
 import Layout from '../../components/layout/Layout'
 import ScannerSection from './ScannerSection'
+import ScannerQueueStatus from './ScannerQueueStatus'
 import UserPreferences from './UserPreferences'
 import UsersTable from './Users/UsersTable'
 import VersionInfo from './VersionInfo'
@@ -42,12 +43,12 @@ const SettingsPage = () => {
   return (
     <Layout title={t('title.settings', 'Settings')}>
       <UserPreferences />
-      {isAdmin && (
-        <>
-          <ScannerSection />
-          <UsersTable />
-        </>
-      )}
+      {isAdmin && <ScannerSection />}
+      {/* Not admin-only: the API lets every user see and cancel the jobs for
+          albums they own, so the controls for it belong to every user too.
+          It renders nothing while the user has no jobs queued. */}
+      <ScannerQueueStatus />
+      {isAdmin && <UsersTable />}
       <VersionInfo />
     </Layout>
   )

@@ -53,6 +53,11 @@ export enum OrderDirection {
   DESC = "DESC",
 }
 
+export enum ScannerJobStatus {
+  QUEUED = "QUEUED",
+  RUNNING = "RUNNING",
+}
+
 //==============================================================
 // END Enums and Input Objects
 //==============================================================

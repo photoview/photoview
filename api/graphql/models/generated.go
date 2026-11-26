@@ -70,6 +70,12 @@ type Pagination struct {
 type Query struct {
 }
 
+// A single album/sub-album currently running or queued in the scanner.
+type ScannerQueueItem struct {
+	Album  *Album           `json:"album"`
+	Status ScannerJobStatus `json:"status"`
+}
+
 type ScannerResult struct {
 	Finished bool     `json:"finished"`
 	Success  bool     `json:"success"`
@@ -310,6 +316,61 @@ func (e *OrderDirection) UnmarshalJSON(b []byte) error {
 }
 
 func (e OrderDirection) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ScannerJobStatus string
+
+const (
+	ScannerJobStatusRunning ScannerJobStatus = "RUNNING"
+	ScannerJobStatusQueued  ScannerJobStatus = "QUEUED"
+)
+
+var AllScannerJobStatus = []ScannerJobStatus{
+	ScannerJobStatusRunning,
+	ScannerJobStatusQueued,
+}
+
+func (e ScannerJobStatus) IsValid() bool {
+	switch e {
+	case ScannerJobStatusRunning, ScannerJobStatusQueued:
+		return true
+	}
+	return false
+}
+
+func (e ScannerJobStatus) String() string {
+	return string(e)
+}
+
+func (e *ScannerJobStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ScannerJobStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ScannerJobStatus", str)
+	}
+	return nil
+}
+
+func (e ScannerJobStatus) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ScannerJobStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ScannerJobStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
