@@ -241,6 +241,37 @@ func AddUserToQueue(user *models.User) error {
 	return stderrors.Join(wrappedErrors...)
 }
 
+// AddAlbumToQueue recursively finds the given album and its sub-albums and adds
+// them to the scanner queue, without touching the rest of the library.
+// Function does not block.
+func AddAlbumToQueue(album *models.Album) error {
+	albumCache := scanner_cache.MakeAlbumCache()
+	albums, album_errors := scanner.FindAlbumsForAlbum(global_scanner_queue.db, album, albumCache)
+
+	global_scanner_queue.mutex.Lock()
+	for _, album := range albums {
+		// Through the constructor rather than a struct literal: a job that
+		// gains fields the constructor fills in (#1492 adds a cancel function
+		// and an id) then fails to compile here instead of being queued with
+		// those fields left empty.
+		job := NewScannerJob(scanner_task.NewTaskContext(context.Background(), global_scanner_queue.db, album, albumCache))
+		global_scanner_queue.addJob(&job)
+	}
+	global_scanner_queue.mutex.Unlock()
+
+	// Like AddUserToQueue since #1469: a sub-album that cannot be read does
+	// not keep the ones that can be read out of the queue. The errors are
+	// reported rather than dropped, and ScanAlbum turns them into a partial
+	// success. Discovery that hit an error also leaves the cleanup out, so a
+	// sub-album missed here keeps its media.
+	wrappedErrors := make([]error, len(album_errors))
+	for i, err := range album_errors {
+		wrappedErrors[i] = errors.Wrapf(err, "find albums for album (album_id: %d)", album.ID)
+	}
+
+	return stderrors.Join(wrappedErrors...)
+}
+
 // Queue should be locked prior to calling this function
 func (queue *ScannerQueue) addJob(job *ScannerJob) error {
 	if exists, err := queue.jobOnQueue(job); exists || err != nil {
