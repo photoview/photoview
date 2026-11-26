@@ -107,3 +107,32 @@ func TestScannerQueueJobOnQueue(t *testing.T) {
 	}
 
 }
+
+func TestChangeScannerConcurrentWorkers(t *testing.T) {
+	// Save and restore only the fields this test changes. ScannerQueue contains a
+	// sync.Mutex, so copying the whole queue would trip go vet's copylocks check.
+	originalIdleChan := global_scanner_queue.idle_chan
+	originalMaxTasks := global_scanner_queue.settings.max_concurrent_tasks
+	t.Cleanup(func() {
+		global_scanner_queue.idle_chan = originalIdleChan
+		global_scanner_queue.settings.max_concurrent_tasks = originalMaxTasks
+	})
+
+	global_scanner_queue.idle_chan = make(chan bool, 1)
+	global_scanner_queue.settings.max_concurrent_tasks = 3
+
+	ChangeScannerConcurrentWorkers(42)
+
+	if got := global_scanner_queue.settings.max_concurrent_tasks; got != 42 {
+		t.Errorf("Expected max_concurrent_tasks to be 42, got %d", got)
+	}
+
+	// The background worker only re-schedules jobs when it is notified. Without
+	// this the new limit would stay unapplied until some running job finishes,
+	// which can take minutes for an album scan.
+	select {
+	case <-global_scanner_queue.idle_chan:
+	default:
+		t.Error("Expected the scanner queue to be notified about the new worker count")
+	}
+}
