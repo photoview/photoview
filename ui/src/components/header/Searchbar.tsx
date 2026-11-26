@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useContext } from 'react'
 import styled from 'styled-components'
 import { useLazyQuery, gql } from '@apollo/client'
 import { debounce, DebouncedFn } from '../../helpers/utils'
+import { AlbumTreeSearchContext } from '../albumTree/AlbumTreeSearchContext'
 import { ProtectedImage } from '../photoGallery/ProtectedMedia'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -45,6 +46,8 @@ const SearchWrapper = styled.div.attrs({
 
 const SearchBar = () => {
   const { t } = useTranslation()
+  // Typing here also filters the album tree, when one is shown.
+  const { setQuery: setTreeQuery } = useContext(AlbumTreeSearchContext)
   const [fetchSearches, fetchResult] = useLazyQuery<searchQuery>(SEARCH_QUERY)
   const [query, setQuery] = useState('')
   const [fetched, setFetched] = useState(false)
@@ -70,6 +73,7 @@ const SearchBar = () => {
     e.persist()
 
     setQuery(e.target.value)
+    setTreeQuery(e.target.value)
     if (e.target.value.trim() != '' && debouncedFetch.current) {
       debouncedFetch.current(e.target.value.trim())
     } else {
@@ -81,7 +85,10 @@ const SearchBar = () => {
   useEffect(() => {
     setExpanded(false)
     setQuery('')
-  }, [location])
+    // The tree reads its filter from the shared context, so clearing only the
+    // input would leave it filtered by a search the field no longer shows.
+    setTreeQuery('')
+  }, [location, setTreeQuery])
 
   const [selectedItem, setSelectedItem] = useState<number | null>(null)
 

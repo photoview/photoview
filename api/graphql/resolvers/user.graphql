@@ -35,6 +35,8 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
+  "Whether to show the album tree next to the gallery. Off unless the user turns it on."
+  showAlbumTree: Boolean
 }
 
 type AuthorizeResult {
@@ -97,5 +99,8 @@ extend type Mutation {
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   "Change user preferences for the logged in user"
-  changeUserPreferences(language: String): UserPreferences! @isAuthorized
+  changeUserPreferences(
+    language: String
+    showAlbumTree: Boolean
+  ): UserPreferences! @isAuthorized
 }

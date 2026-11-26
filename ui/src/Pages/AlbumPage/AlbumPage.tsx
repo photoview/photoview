@@ -12,6 +12,7 @@ import { albumQuery, albumQueryVariables } from './__generated__/albumQuery'
 import useOrderingParams from '../../hooks/useOrderingParams'
 import { useParams } from 'react-router-dom'
 import { isNil } from '../../helpers/utils'
+import MobileAlbumTreeButton from '../../components/albumTree/MobileAlbumTreeButton'
 
 const ALBUM_QUERY = gql`
   ${ALBUM_GALLERY_FRAGMENT}
@@ -108,6 +109,9 @@ function AlbumPage() {
         showFilter
         setOrdering={orderParams.setOrdering}
         ordering={orderParams}
+        // The tree is for moving between folders, so on a phone it has to be
+        // reachable from inside an album too, not only from the album list.
+        filterAction={<MobileAlbumTreeButton />}
       />
       <PaginateLoader
         active={!finishedLoadingMore && !loading}
