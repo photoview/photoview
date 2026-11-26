@@ -35,6 +35,8 @@ enum LanguageTranslation {
 type UserPreferences {
   id: ID!
   language: LanguageTranslation
+  "How many results a search returns per category. 0 means as many as the server allows (currently 1000). Unset falls back to the server default."
+  searchResultLimit: Int
 }
 
 type AuthorizeResult {
@@ -97,5 +99,14 @@ extend type Mutation {
   userRemoveRootAlbum(userId: ID!, albumId: ID!): Album @isAdmin
 
   "Change user preferences for the logged in user"
-  changeUserPreferences(language: String): UserPreferences! @isAuthorized
+  changeUserPreferences(
+    language: String
+    """
+    How many results a search returns per category. 0 means as many as the
+    server allows (currently 1000), and any negative value clears the
+    preference so the server default applies again. Omitting it leaves the
+    current setting alone.
+    """
+    searchResultLimit: Int
+  ): UserPreferences! @isAuthorized
 }

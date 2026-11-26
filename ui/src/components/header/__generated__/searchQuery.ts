@@ -85,4 +85,6 @@ export interface searchQuery {
 
 export interface searchQueryVariables {
   query: string;
+  limitMedia?: number | null;
+  limitAlbums?: number | null;
 }

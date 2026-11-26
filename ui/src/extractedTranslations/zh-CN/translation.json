@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "相册",
         "media": "媒体"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,14 @@
   "routes": {
     "page_not_found": "找不到网页"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "最多允许同时进行的扫描任务数目",
@@ -166,6 +175,10 @@
       "language_selector": {
         "placeholder": "选择语言"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": "跟随系统"
@@ -179,7 +192,8 @@
         },
         "title": "主题设置"
       },
-      "title": "用户选项"
+      "title": "用户选项",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {

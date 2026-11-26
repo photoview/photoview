@@ -58,9 +58,16 @@ type MediaGalleryProps = {
   loading: boolean
   mediaState: MediaGalleryState
   dispatchMedia: React.Dispatch<PhotoGalleryAction>
+  // Identifies this gallery among several on one page, so browser history
+  // only reopens the one that pushed the entry. See urlPresentModeSetupHook.
+  groupId?: string
 }
 
-const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
+const MediaGallery = ({
+  mediaState,
+  dispatchMedia,
+  groupId,
+}: MediaGalleryProps) => {
   const [markFavorite] = useMarkFavoriteMutation()
 
   const { media, activeIndex, presenting } = mediaState
@@ -91,7 +98,11 @@ const MediaGallery = ({ mediaState, dispatchMedia }: MediaGalleryProps) => {
             })
           }}
           clickPresent={() => {
-            openPresentModeAction({ dispatchMedia, activeIndex: index })
+            openPresentModeAction({
+              dispatchMedia,
+              activeIndex: index,
+              groupId,
+            })
           }}
         />
       )

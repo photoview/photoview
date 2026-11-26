@@ -41,7 +41,8 @@
       "result_type": {
         "albums": "アルバム",
         "media": "メディア"
-      }
+      },
+      "view_all_results": ""
     }
   },
   "login_page": {
@@ -132,6 +133,14 @@
   "routes": {
     "page_not_found": "ページが見つかりません"
   },
+  "search_page": {
+    "albums_heading": "",
+    "error": "",
+    "heading": "",
+    "no_results": "",
+    "title": "",
+    "truncated_other": ""
+  },
   "settings": {
     "concurrent_workers": {
       "description": "同時に実行できる自動スキャンの最大数",
@@ -166,6 +175,10 @@
       "language_selector": {
         "placeholder": "言語を選択"
       },
+      "search_result_limit": {
+        "description": "",
+        "label": ""
+      },
       "theme": {
         "auto": {
           "label": "システム設定に従う"
@@ -179,7 +192,8 @@
         },
         "title": "テーマの設定"
       },
-      "title": "ユーザー設定"
+      "title": "ユーザー設定",
+      "title_with_username": ""
     },
     "users": {
       "add_user": {
